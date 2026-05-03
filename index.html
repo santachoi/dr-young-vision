@@ -1,0 +1,2877 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dr. YOUNG Clinical Vision</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <style>
+    :root{
+      --bg:#04110f; --bg2:#071d1a; --panel:#0d2421; --panel2:#12332f; --panel3:#17443e;
+      --text:#f2fffb; --muted:#a7c8bf; --muted2:#6f9189; --line:rgba(179,255,232,.14);
+      --white:#fff; --red:#ff5d5d; --blue:#51d6ff; --amber:#ffc857; --green:#20e6a7; --purple:#93ffe3;
+      --emerald:#19d99a; --emerald2:#0aa879; --mint:#b8ffe8; --deep:#061512;
+      --shadow:0 26px 78px rgba(0,35,26,.42); --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#080b11;color:var(--text)}
+    body{background:
+      radial-gradient(circle at 50% 0%,rgba(53,255,196,.22) 0,rgba(12,49,42,.72) 26%,rgba(5,18,16,.96) 63%,#020807 100%),
+      linear-gradient(135deg,#071a17,#020807 72%);
+    }
+    button,label.file{border:0;border-radius:14px;padding:10px 15px;background:linear-gradient(135deg,#ffffff,#d9fff1);color:#06251d;font-weight:950;cursor:pointer;box-shadow:0 12px 28px rgba(0,0,0,.28),0 0 0 1px rgba(184,255,232,.14);white-space:nowrap}
+    button.secondary{background:linear-gradient(180deg,#17312d,#0e221f);color:#c9fff0;border:1px solid rgba(184,255,232,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 26px rgba(0,0,0,.18)}
+    button.green{background:linear-gradient(135deg,#21e6a7,#08ae7c);color:#03231a;box-shadow:0 14px 34px rgba(32,230,167,.26)}.file input{display:none}button:disabled{opacity:.45;cursor:not-allowed}
+
+    .app{min-height:100vh;display:grid;grid-template-columns:320px minmax(560px,1fr) 430px;gap:22px;padding:24px 26px;align-items:start}
+    .leftRail{position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto;padding:16px 12px 18px;background:linear-gradient(180deg,rgba(16,44,39,.54),rgba(4,13,12,.34));border:1px solid rgba(184,255,232,.08);border-radius:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 24px 70px rgba(0,0,0,.24)}
+    .leftRail::-webkit-scrollbar{width:8px}.leftRail::-webkit-scrollbar-thumb{background:#333b4c;border-radius:999px}
+    .centerCol{min-width:0}.rightRail{position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto}.rightRail::-webkit-scrollbar{width:8px}.rightRail::-webkit-scrollbar-thumb{background:#333b4c;border-radius:999px}
+
+    .topHeader{display:block;position:relative;margin:18px auto 18px;max-width:980px;text-align:left;padding:6px 0 0}
+    h1{margin:0 0 9px;font-size:31px;letter-spacing:-.06em;line-height:1.12;font-weight:950;color:#f2fffb;text-shadow:0 0 32px rgba(32,230,167,.22),0 2px 22px rgba(255,255,255,.06)}
+    .subtitle{margin:0;color:#b2d8cf;font-size:14px;line-height:1.65;max-width:720px;font-weight:700}
+    .toolbar{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;width:max-content;max-width:100%;margin:20px auto 16px;background:linear-gradient(180deg,rgba(28,74,66,.74),rgba(8,24,22,.64));border:1px solid rgba(184,255,232,.13);padding:10px 12px;border-radius:22px;box-shadow:0 18px 55px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.05)}
+    .toolbar button,.toolbar label.file{text-align:center;padding:11px 15px;font-size:13px}
+
+    .controlCard{background:linear-gradient(180deg,rgba(31,70,64,.74),rgba(9,26,23,.76));border:1px solid rgba(184,255,232,.11);border-radius:20px;padding:13px;margin:0 0 12px;box-shadow:0 16px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.04)}
+    .controlCard label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:#bfeee2;font-size:13px;font-weight:850}.controlCard label b{color:#ecfffa;font-weight:950}.controlCard label b{color:#eaf2ff;font-weight:950}
+    .controlCard input[type=range]{width:100%;accent-color:var(--emerald)}.controlCard select{width:100%;border:1px solid rgba(184,255,232,.17);background:#112b27;color:#eafff8;border-radius:12px;padding:9px;font-weight:800}
+    .railTitle{font-size:12px;color:#76b9a9;font-weight:950;margin:4px 8px 14px;text-transform:uppercase;letter-spacing:.10em}
+
+    button.toggleSwitch{position:relative;transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;min-width:112px}
+    button.toggleSwitch.is-active{transform:scale(1.07);background:linear-gradient(135deg,#dffff4,#25e9aa);color:#03231a;border:1px solid rgba(184,255,232,.82);box-shadow:0 0 0 4px rgba(32,230,167,.18),0 12px 30px rgba(32,230,167,.22)}
+    button.toggleSwitch.is-off{transform:scale(.96);background:#10201e;color:#78a39a;border:1px solid rgba(184,255,232,.10);box-shadow:none}
+    button.toggleSwitch.is-active::after{content:'ON';margin-left:8px;padding:2px 6px;border-radius:999px;background:#063326;color:#b8ffe8;font-size:10px;font-weight:950}
+    button.toggleSwitch.is-off::after{content:'OFF';margin-left:8px;padding:2px 6px;border-radius:999px;background:#243a36;color:#8fb5ac;font-size:10px;font-weight:950}
+
+    .stageOuter{background:linear-gradient(180deg,rgba(184,255,232,.13),rgba(184,255,232,.055));border:1px solid rgba(184,255,232,.16);border-radius:30px;padding:14px;box-shadow:0 28px 80px rgba(0,0,0,.36),0 0 0 1px rgba(32,230,167,.04);max-width:900px;margin:0 auto}
+    .stage{position:relative;width:100%;aspect-ratio:4/3;background:#d9dedb;border-radius:19px;overflow:hidden;touch-action:none;user-select:none}
+    canvas{position:absolute;inset:0;width:100%;height:100%}
+    .hint{position:absolute;left:20px;right:20px;bottom:18px;background:linear-gradient(135deg,rgba(5,22,18,.80),rgba(8,40,32,.72));backdrop-filter:blur(10px);padding:12px 15px;border-radius:14px;color:#effff9;font-size:12.5px;line-height:1.58;font-weight:750;border:1px solid rgba(184,255,232,.12)}
+    .status{width:max-content;max-width:92%;margin:17px auto 0;display:flex;gap:10px;align-items:center;background:linear-gradient(180deg,rgba(19,52,47,.82),rgba(8,25,22,.78));border:1px solid rgba(184,255,232,.12);padding:10px 18px;border-radius:4px;color:#dbfff3;font-size:14px;font-weight:900;box-shadow:0 13px 32px rgba(0,0,0,.22)}
+    .dot{width:14px;height:14px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 6px rgba(255,200,87,.12)}.dot.ok{background:var(--emerald);box-shadow:0 0 0 6px rgba(32,230,167,.14),0 0 18px rgba(32,230,167,.5)}.dot.bad{background:var(--red);box-shadow:0 0 0 6px rgba(255,93,93,.12)}
+    .legend{max-width:900px;margin:18px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.chip{border:1px solid rgba(184,255,232,.12);border-radius:999px;padding:9px 10px;text-align:center;color:#c9fff0;font-size:12px;font-weight:900;background:rgba(5,21,18,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+
+    .rightPanel{background:linear-gradient(180deg,rgba(22,55,50,.82),rgba(7,20,18,.84));border:1px solid rgba(184,255,232,.13);border-radius:26px;padding:17px;box-shadow:0 26px 78px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04)}
+    .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}.tab{background:#122823;color:#bceadc;box-shadow:none;padding:10px 8px;font-size:12px;border-radius:13px;border:1px solid rgba(184,255,232,.08)}.tab.active{background:linear-gradient(135deg,#ffffff,#d9fff1);color:#05241c;box-shadow:0 10px 25px rgba(0,0,0,.16)}
+    .hidden{display:none!important}h2{margin:0 0 13px;font-size:23px;letter-spacing:-.045em;line-height:1.25;color:#f1fffb}h3{margin:18px 0 10px;font-size:15px;color:#fff}.small{font-size:12px;color:#9fa9bc;line-height:1.55}
+    .scoreBox{background:linear-gradient(135deg,#fffaf2,#e5fff5);color:#06251d;border-radius:20px;padding:18px;margin-bottom:12px;box-shadow:0 18px 42px rgba(0,0,0,.22)}
+    .scoreTop{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.scoreTitle{font-size:12px;color:#555;font-weight:900}.scoreNum{font-size:34px;font-weight:950;letter-spacing:-.065em}.badge{padding:7px 10px;border-radius:999px;background:#111;color:#fff;font-size:11px;font-weight:900;white-space:nowrap}.bar{height:10px;background:rgba(0,0,0,.12);border-radius:999px;overflow:hidden}.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#18d997,#b8ffe8,#ffc857,#ff5d5d);border-radius:999px;transition:.25s}
+    .metric{display:grid;grid-template-columns:102px 1fr 42px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px}.metric .name{color:#e3e8f2}.metric .num{text-align:right;font-weight:900}.miniBar{height:8px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden}.miniBar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#b8ffe8,#20e6a7)}
+    .analysisGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.box{background:rgba(184,255,232,.06);border:1px solid rgba(184,255,232,.10);border-radius:16px;padding:11px}.box b{display:block;margin-bottom:4px}.box span{font-size:11.5px;color:#b8c1d3;line-height:1.45}
+    .recommend{display:grid;gap:10px}.rec{background:rgba(184,255,232,.06);border:1px solid rgba(184,255,232,.10);border-left:4px solid var(--emerald);border-radius:15px;padding:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}.rec strong{display:block;font-size:14px;margin-bottom:5px}.rec span,.rec label{color:#cbd4e3;font-size:12.5px;line-height:1.55}.rec.danger{border-left-color:var(--red);background:rgba(255,42,42,.10)}.rec.warn{border-left-color:var(--amber);background:rgba(255,176,32,.10)}.rec.ok{border-left-color:var(--green);background:rgba(35,201,139,.08)}
+    .checklist{display:grid;gap:8px}.checkitem{display:flex;gap:8px;align-items:flex-start;background:rgba(184,255,232,.055);border:1px solid rgba(184,255,232,.09);padding:9px;border-radius:13px}.checkitem input{margin-top:3px}.riskPill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-weight:950;font-size:11px;background:#242a38;color:#fff}.riskPill.red{background:rgba(255,42,42,.18);color:#ffb4b4}.riskPill.amber{background:rgba(255,176,32,.18);color:#ffd68a}.riskPill.green{background:rgba(35,201,139,.18);color:#9af0ce}
+
+    @media(max-width:1180px){.app{grid-template-columns:280px minmax(450px,1fr)}.rightRail{grid-column:2}.toolbar{max-width:720px;width:auto}}
+    @media(max-width:860px){.app{display:block;padding:14px}.leftRail,.rightRail{position:relative;height:auto;overflow:visible}.leftRail{border-right:0;padding:0}.topHeader{margin-top:16px}.legend{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr;width:100%;max-width:none}.rightRail{margin-top:18px}}
+    @media print{
+      @page{size:A4 portrait;margin:14mm 13mm 16mm 13mm} *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      html,body{background:white!important;color:#111!important;font-size:10.5pt;line-height:1.55}.app{display:block!important;padding:0!important}.leftRail,.toolbar,.legend,.hint,.status,.stageOuter,.tabs{display:none!important}.topHeader{display:block!important;margin:0 0 8mm 0!important;padding:0 0 5mm 0!important;border-bottom:1.5pt solid #111;break-after:avoid}.centerCol,.rightRail{position:relative!important;height:auto!important;overflow:visible!important}.rightPanel{box-shadow:none!important;border:0!important;background:white!important;padding:0!important;color:#111!important}.hidden{display:block!important}h1{font-size:22pt!important;color:#111!important}h2{font-size:16pt!important;color:#111!important;break-after:avoid}h3{font-size:12.5pt!important;color:#111!important;break-after:avoid}p,.small{orphans:3;widows:3;color:#333!important}.scoreBox{border:1pt solid #ddd!important;box-shadow:none!important;background:#fff7ee!important;border-radius:8mm!important;padding:6mm!important;margin:0 0 5mm 0!important;break-inside:avoid}.metric{grid-template-columns:36mm 1fr 15mm!important;padding:2.4mm 0!important;border-bottom:0.5pt solid #e5e5e5!important;break-inside:avoid;color:#111!important}.metric .name,.metric .num{color:#111!important}.miniBar{background:#eee!important}.miniBar span{background:#777!important}.analysisGrid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4mm!important;margin:4mm 0!important}.box{border:0.7pt solid #ddd!important;background:#fafafa!important;border-radius:4mm!important;padding:4mm!important;break-inside:avoid}.box span{color:#333!important}.rec,.checkitem{border:0.7pt solid #ddd!important;border-left:3pt solid #777!important;background:white!important;color:#111!important;border-radius:4mm!important;padding:4mm!important;margin:0 0 3.5mm 0!important;break-inside:avoid}.rec span,.rec label,.checkitem span{color:#333!important;font-size:9.5pt!important}.riskPill{border:0.7pt solid #ccc!important;background:#f5f5f5!important;color:#111!important}
+    }
+  
+/* ============================================================
+   Dr. YOUNG Apple Glass Layout V2
+   - 단일 HTML 유지
+   - 기능 JS는 그대로 유지
+   - 레이아웃만 첨부 이미지처럼 3단 구성으로 재정렬
+   ============================================================ */
+:root{
+  --apple-bg:#020806;
+  --apple-bg2:#031512;
+  --glass-1:rgba(255,255,255,.16);
+  --glass-2:rgba(255,255,255,.055);
+  --glass-line:rgba(220,255,244,.14);
+  --glass-line-strong:rgba(255,255,255,.24);
+  --glass-shadow:0 24px 70px rgba(0,0,0,.36);
+  --apple-mint:#48edc0;
+  --apple-mint2:#19d99a;
+  --apple-text:#f5fffb;
+  --apple-muted:#bedbd2;
+}
+
+html,body{
+  min-height:100%;
+  background:
+    radial-gradient(circle at 14% 4%, rgba(40,190,148,.16), rgba(40,190,148,0) 33%),
+    radial-gradient(circle at 78% 7%, rgba(115,255,219,.09), rgba(115,255,219,0) 31%),
+    linear-gradient(180deg,#041713 0%,#020b09 72%,#010504 100%) !important;
+  color:var(--apple-text);
+}
+
+body.apple-glass-v2{
+  overflow-x:hidden;
+}
+
+body.apple-glass-v2::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(255,255,255,.022) 0 1px, transparent 1px 100%);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(180deg,rgba(0,0,0,.55),transparent 75%);
+  opacity:.28;
+  z-index:0;
+}
+
+/* 3-column layout: left upload / middle report / right controls */
+.app{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  display:grid !important;
+  grid-template-columns:minmax(560px,1.22fr) minmax(360px,.84fr) 320px !important;
+  grid-template-areas:"visual report controls";
+  gap:20px !important;
+  padding:13px 17px 22px !important;
+  align-items:start;
+}
+
+.centerCol{
+  grid-area:visual;
+  grid-column:auto !important;
+  grid-row:1 !important;
+  min-width:0;
+  padding:24px 0 0 !important;
+}
+
+.rightRail{
+  grid-area:report;
+  grid-column:auto !important;
+  grid-row:1 !important;
+  position:sticky !important;
+  top:13px !important;
+  height:calc(100vh - 26px) !important;
+  overflow:auto !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+
+.leftRail{
+  grid-area:controls;
+  grid-column:auto !important;
+  grid-row:1 !important;
+  position:sticky !important;
+  top:13px !important;
+  height:calc(100vh - 26px) !important;
+  overflow:auto !important;
+  padding:20px 12px 20px !important;
+  background:linear-gradient(180deg,rgba(8,35,31,.68),rgba(2,14,12,.60)) !important;
+  border:1px solid rgba(209,255,241,.08) !important;
+  border-radius:0 !important;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.035) !important;
+}
+
+.leftRail::-webkit-scrollbar,
+.rightRail::-webkit-scrollbar{
+  width:8px;
+}
+.leftRail::-webkit-scrollbar-thumb,
+.rightRail::-webkit-scrollbar-thumb{
+  background:rgba(180,255,235,.18);
+  border-radius:999px;
+}
+
+/* Header typography */
+.topHeader{
+  display:block !important;
+  max-width:none !important;
+  margin:0 0 17px !important;
+  padding:0 !important;
+  text-align:left !important;
+}
+
+h1{
+  margin:0 0 10px !important;
+  color:#f8fffc !important;
+  font-size:30px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.065em !important;
+  font-weight:950 !important;
+  text-shadow:0 0 34px rgba(86,255,206,.14), 0 2px 26px rgba(0,0,0,.25) !important;
+}
+h1 .brand{
+  font-weight:1000;
+  color:#ffffff;
+  letter-spacing:-.045em;
+}
+
+.subtitle{
+  max-width:660px !important;
+  margin:0 0 20px !important;
+  color:var(--apple-muted) !important;
+  font-size:14px !important;
+  line-height:1.65 !important;
+  font-weight:800 !important;
+}
+
+/* Apple-style glass toolbar */
+.toolbar{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 0 18px !important;
+  padding:12px 14px !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  gap:9px !important;
+  border-radius:22px !important;
+  background:
+    linear-gradient(180deg, rgba(57,143,122,.34), rgba(8,35,29,.38)),
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.025)) !important;
+  border:1px solid rgba(199,255,238,.10) !important;
+  box-shadow:var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.09) !important;
+  backdrop-filter:blur(14px) saturate(150%);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+}
+
+/* Old Apple aqua/glass buttons */
+button,
+label.file,
+.tab{
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--glass-line-strong) !important;
+  border-radius:16px !important;
+  padding:11px 17px !important;
+  color:#eafff8 !important;
+  font-size:13px !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+  letter-spacing:-.015em;
+  cursor:pointer;
+  white-space:nowrap;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.105) 48%, rgba(255,255,255,.045) 52%, rgba(255,255,255,.08) 100%),
+    linear-gradient(180deg, rgba(38,117,98,.46), rgba(7,35,29,.50)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.48),
+    inset 0 -1px 0 rgba(0,0,0,.10),
+    0 9px 23px rgba(0,0,0,.24) !important;
+  text-shadow:0 1px 1px rgba(0,0,0,.25);
+  backdrop-filter:blur(12px) saturate(155%);
+  -webkit-backdrop-filter:blur(12px) saturate(155%);
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+}
+button::before,
+label.file::before,
+.tab::before{
+  content:"";
+  position:absolute;
+  left:9px;
+  right:9px;
+  top:4px;
+  height:44%;
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,0));
+  pointer-events:none;
+  opacity:.55;
+}
+button:hover,
+label.file:hover,
+.tab:hover{
+  transform:translateY(-1px);
+  border-color:rgba(236,255,249,.34) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.58),
+    inset 0 -1px 0 rgba(0,0,0,.08),
+    0 13px 30px rgba(0,0,0,.29) !important;
+}
+button:active,
+label.file:active,
+.tab:active{
+  transform:translateY(1px) scale(.99);
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,.18),
+    0 5px 16px rgba(0,0,0,.18) !important;
+}
+button:disabled{
+  opacity:.42 !important;
+  cursor:not-allowed !important;
+  transform:none !important;
+}
+.file input{display:none !important;}
+
+label.file{
+  color:#08271f !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(234,252,246,.88) 52%, rgba(204,240,230,.82) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.10)) !important;
+  border-color:rgba(255,255,255,.66) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.35) !important;
+}
+button.secondary{
+  color:#dffaf2 !important;
+}
+button.green{
+  color:#052a22 !important;
+  background:
+    linear-gradient(180deg, rgba(183,255,236,.98) 0%, rgba(50,226,179,.88) 52%, rgba(18,193,142,.86) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.44), rgba(255,255,255,.12)) !important;
+  border-color:rgba(218,255,246,.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 -1px 0 rgba(0,0,0,.07),
+    0 13px 32px rgba(24,214,159,.21) !important;
+}
+
+/* Toggle buttons */
+button.toggleSwitch{
+  min-width:120px !important;
+  padding-right:14px !important;
+}
+button.toggleSwitch.is-active{
+  transform:none !important;
+  color:#052a22 !important;
+  background:
+    linear-gradient(180deg, rgba(191,255,239,.98) 0%, rgba(72,237,192,.88) 52%, rgba(35,207,154,.84) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.40), rgba(255,255,255,.10)) !important;
+  border-color:rgba(217,255,245,.74) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.76),
+    inset 0 -1px 0 rgba(0,0,0,.06),
+    0 11px 28px rgba(35,207,154,.20) !important;
+}
+button.toggleSwitch.is-off{
+  transform:none !important;
+  color:#c7e6df !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.04)),
+    linear-gradient(180deg, rgba(15,54,46,.56), rgba(4,19,16,.48)) !important;
+  border-color:rgba(255,255,255,.12) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.19),
+    0 8px 20px rgba(0,0,0,.20) !important;
+}
+button.toggleSwitch.is-active::after,
+button.toggleSwitch.is-off::after{
+  display:inline-block;
+  vertical-align:middle;
+  margin-left:8px !important;
+  padding:3px 7px !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  font-weight:1000 !important;
+}
+button.toggleSwitch.is-active::after{
+  content:"ON" !important;
+  color:#083228 !important;
+  background:rgba(255,255,255,.68) !important;
+}
+button.toggleSwitch.is-off::after{
+  content:"OFF" !important;
+  color:#ddf6f0 !important;
+  background:rgba(255,255,255,.12) !important;
+}
+
+/* Main image stage */
+.stageOuter{
+  max-width:none !important;
+  margin:0 !important;
+  padding:14px !important;
+  border-radius:30px !important;
+  background:
+    linear-gradient(180deg, rgba(52,104,94,.38), rgba(11,42,36,.44)),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) !important;
+  border:1px solid rgba(211,255,243,.12) !important;
+  box-shadow:var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+.stage{
+  border-radius:18px !important;
+  background:#d7d7d7 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+}
+.hint{
+  background:linear-gradient(180deg, rgba(43,77,70,.88), rgba(28,62,56,.82)) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#f3fffb !important;
+  font-size:12.5px !important;
+  line-height:1.6 !important;
+  font-weight:850 !important;
+  border-radius:13px !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+.status{
+  width:100% !important;
+  max-width:none !important;
+  justify-content:center !important;
+  margin:14px 0 0 !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg,rgba(27,63,56,.72),rgba(7,28,24,.62)) !important;
+  border:1px solid rgba(211,255,243,.10) !important;
+}
+.legend{
+  max-width:none !important;
+  margin:15px 0 0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,1fr) !important;
+  gap:9px !important;
+}
+.chip{
+  border-radius:999px !important;
+  padding:9px 10px !important;
+  color:#ddfff5 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
+    rgba(4,22,19,.42) !important;
+  border:1px solid rgba(211,255,243,.12) !important;
+  font-size:12px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+/* Report panel */
+.rightPanel{
+  min-height:650px;
+  padding:16px 18px 18px !important;
+  border-radius:27px !important;
+  background:
+    linear-gradient(180deg, rgba(11,43,37,.78), rgba(4,18,16,.84)),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)) !important;
+  border:1px solid rgba(211,255,243,.11) !important;
+  box-shadow:var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.055) !important;
+}
+.tabs{
+  display:grid !important;
+  grid-template-columns:repeat(4,1fr) !important;
+  gap:8px !important;
+  margin-bottom:15px !important;
+}
+.tab{
+  padding:12px 8px !important;
+  font-size:12px !important;
+  border-radius:16px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    0 8px 20px rgba(0,0,0,.18) !important;
+}
+.tab.active{
+  color:#08271f !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.99), rgba(225,245,239,.91)),
+    linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.10)) !important;
+  border-color:rgba(255,255,255,.62) !important;
+}
+h2{
+  margin:0 0 14px !important;
+  color:#f4fffb !important;
+  font-size:23px !important;
+  line-height:1.16 !important;
+  letter-spacing:-.055em !important;
+  font-weight:950 !important;
+}
+h3{
+  color:#f4fffb !important;
+  font-size:15px !important;
+}
+.scoreBox{
+  margin-bottom:15px !important;
+  padding:20px 18px !important;
+  border-radius:22px !important;
+  color:#11231d !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(235,245,240,.92)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 15px 34px rgba(0,0,0,.20) !important;
+}
+.scoreTitle{
+  color:#666b68 !important;
+  font-size:12px !important;
+  letter-spacing:-.01em;
+}
+.scoreNum{
+  color:#102920 !important;
+  font-size:35px !important;
+  font-weight:1000 !important;
+}
+.badge{
+  background:#050908 !important;
+  color:#fff !important;
+  border-radius:999px !important;
+  padding:8px 12px !important;
+  font-size:11px !important;
+}
+.bar{
+  background:rgba(4,17,14,.11) !important;
+}
+.metric{
+  grid-template-columns:102px 1fr 42px !important;
+  gap:8px !important;
+  padding:8px 0 !important;
+  color:#d9efe8 !important;
+  border-bottom:1px solid rgba(255,255,255,.055) !important;
+}
+.metric .name{
+  color:#e5f5ef !important;
+}
+.miniBar{
+  background:rgba(215,255,242,.13) !important;
+}
+.analysisGrid{
+  gap:10px !important;
+}
+.box{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035)) !important;
+  border:1px solid rgba(211,255,243,.11) !important;
+  border-radius:16px !important;
+}
+.box span{
+  color:#bed8d0 !important;
+}
+
+/* Controls panel */
+.railTitle{
+  margin:0 8px 15px !important;
+  color:#82ccb8 !important;
+  font-size:12px !important;
+  font-weight:1000 !important;
+  text-transform:uppercase;
+  letter-spacing:.13em !important;
+}
+.controlCard{
+  margin:0 0 12px !important;
+  padding:14px 14px 13px !important;
+  border-radius:18px !important;
+  background:
+    linear-gradient(180deg, rgba(24,82,70,.55), rgba(6,31,27,.50)),
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)) !important;
+  border:1px solid rgba(211,255,243,.10) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 9px 23px rgba(0,0,0,.12) !important;
+}
+.controlCard label{
+  margin-bottom:11px !important;
+  color:#eafff8 !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+}
+.controlCard label b{
+  color:#f5fffb !important;
+  font-weight:1000 !important;
+}
+.controlCard input[type=range]{
+  width:100% !important;
+  height:18px;
+  accent-color:var(--apple-mint2) !important;
+}
+.controlCard select{
+  width:100% !important;
+  border:1px solid rgba(220,255,245,.16) !important;
+  background:
+    linear-gradient(180deg, rgba(17,54,48,.92), rgba(9,32,28,.88)) !important;
+  color:#effff9 !important;
+  border-radius:14px !important;
+  padding:10px 12px !important;
+  font-weight:900 !important;
+}
+
+/* Recommendation cards */
+.rec{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03)) !important;
+  border:1px solid rgba(211,255,243,.10) !important;
+  border-left:4px solid var(--emerald) !important;
+  border-radius:16px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.rec span,.rec label,.small{
+  color:#bfd8d1 !important;
+}
+
+/* Print should remain clean */
+@media print{
+  body.apple-glass-v2::before{display:none !important;}
+  .app{
+    display:block !important;
+    padding:0 !important;
+  }
+  .centerCol,.rightRail,.leftRail{
+    position:relative !important;
+    height:auto !important;
+    overflow:visible !important;
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+  }
+}
+
+/* Responsive */
+@media(max-width:1180px){
+  .app{
+    grid-template-columns:minmax(500px,1fr) 340px !important;
+    grid-template-areas:
+      "visual controls"
+      "report controls";
+  }
+  .rightRail{
+    position:relative !important;
+    top:auto !important;
+    height:auto !important;
+  }
+  .leftRail{
+    height:calc(100vh - 26px) !important;
+  }
+}
+@media(max-width:860px){
+  .app{
+    display:block !important;
+    padding:14px !important;
+  }
+  .centerCol,.rightRail,.leftRail{
+    position:relative !important;
+    height:auto !important;
+    overflow:visible !important;
+    padding:0 !important;
+    margin:0 0 16px !important;
+  }
+  .leftRail{
+    padding:15px !important;
+    border-radius:24px !important;
+  }
+  .toolbar{
+    justify-content:center !important;
+  }
+  .legend{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+  h1{
+    font-size:28px !important;
+  }
+}
+
+  
+/* ===== V3 layout refinements to match reference screenshot ===== */
+.toolbar{display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:10px !important;}
+.toolbarRow{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; width:100%;}
+.toolbarRow.secondaryRow{justify-content:center;}
+.toolbarRow.secondaryRow .green{min-width:148px;}
+.stageOuter{padding:13px !important; border-radius:31px !important;}
+.stage{aspect-ratio:1 / 0.74 !important; background:#cfcfcf !important; position:relative;}
+.stage::after{content:""; position:absolute; left:12px; right:12px; bottom:12px; height:22%; min-height:70px; background:rgba(255,255,255,.58); border-radius:0 0 12px 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.28); z-index:0; pointer-events:none;}
+canvas{z-index:1;}
+.hint{position:relative !important; left:auto !important; right:auto !important; bottom:auto !important; margin:14px 14px 0 !important; padding:13px 16px !important;}
+.status{display:none !important;}
+.legend{margin:28px 0 0 !important;}
+.rightPanel{min-height:620px;}
+@media(max-width:1180px){.toolbarRow{justify-content:flex-start;}.hint{margin:14px 0 0 !important;}}
+
+/* ===== V4 button refinements =====
+   - 얼굴사진 업로드: 파란색 강조 버튼
+   - 상담 리포트 출력: 혈관위험 오른쪽에 같은 줄 배치
+*/
+.toolbar{
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+}
+.toolbarRow.primaryRow{
+  width:auto !important;
+  flex:0 1 auto !important;
+  justify-content:center !important;
+  gap:10px !important;
+}
+.toolbarRow.secondaryRow{display:none !important;}
+label.file.uploadBlue,
+.toolbar label.file.uploadBlue{
+  color:#ffffff !important;
+  background:
+    linear-gradient(180deg, rgba(156,216,255,.98) 0%, rgba(54,151,255,.94) 48%, rgba(0,102,219,.94) 52%, rgba(0,78,180,.96) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.10)) !important;
+  border-color:rgba(203,234,255,.86) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    inset 0 -1px 0 rgba(0,0,0,.18),
+    0 12px 30px rgba(0,118,255,.34),
+    0 0 0 1px rgba(64,174,255,.18) !important;
+  text-shadow:0 1px 1px rgba(0,34,90,.42) !important;
+}
+label.file.uploadBlue:hover,
+.toolbar label.file.uploadBlue:hover{
+  background:
+    linear-gradient(180deg, rgba(183,230,255,.99) 0%, rgba(76,170,255,.96) 48%, rgba(0,116,235,.96) 52%, rgba(0,88,199,.98) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(0,0,0,.14),
+    0 15px 36px rgba(0,126,255,.42) !important;
+}
+button.printInline{
+  min-width:134px !important;
+}
+@media(max-width:720px){
+  .toolbarRow.primaryRow{width:100% !important;}
+  .toolbar button,.toolbar label.file{flex:1 1 44%;}
+}
+
+
+
+/* ===== V5 black cinematic glass theme =====
+   - 전체 배경: 검정 중심
+   - 버튼: 첨부 이미지 느낌의 반투명 유리 / 아이스 글래스 질감
+   - 기존 기능과 버튼 배치는 유지
+*/
+:root{
+  --black-glass-bg:#000000;
+  --black-panel:rgba(4,8,10,.58);
+  --black-panel-strong:rgba(8,13,16,.72);
+  --ice-line:rgba(219,244,255,.28);
+  --ice-line-soft:rgba(219,244,255,.12);
+  --ice-glow:rgba(119,217,255,.20);
+  --rose-glow:rgba(255,185,178,.13);
+  --ice-text:#f7fbff;
+  --ice-muted:#b8cad0;
+}
+html,body{
+  background:#000 !important;
+  color:var(--ice-text) !important;
+}
+body.apple-glass-v2{
+  background:
+    radial-gradient(circle at 7% -8%, rgba(96,224,255,.13), rgba(0,0,0,0) 24%),
+    radial-gradient(circle at 86% 0%, rgba(255,181,165,.10), rgba(0,0,0,0) 26%),
+    radial-gradient(circle at 50% 102%, rgba(96,224,255,.055), rgba(0,0,0,0) 28%),
+    linear-gradient(180deg,#020405 0%, #000 52%, #000 100%) !important;
+}
+body.apple-glass-v2::before{
+  opacity:.16 !important;
+  background:
+    linear-gradient(125deg, transparent 0 44%, rgba(115,230,255,.16) 45%, transparent 46% 100%),
+    radial-gradient(circle at 85% 12%, rgba(255,212,183,.10), transparent 14%),
+    linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 100%) !important;
+  background-size:100% 100%,100% 100%,42px 42px !important;
+  mask-image:linear-gradient(180deg, rgba(0,0,0,.7), transparent 92%) !important;
+}
+.app{
+  background:transparent !important;
+}
+h1{
+  color:#ffffff !important;
+  text-shadow:0 0 30px rgba(146,232,255,.18), 0 2px 24px rgba(0,0,0,.65) !important;
+}
+.subtitle{
+  color:#b9cdd2 !important;
+}
+.toolbar,
+.stageOuter,
+.rightPanel,
+.leftRail,
+.controlCard,
+.box,
+.rec,
+.checkitem{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    linear-gradient(180deg, var(--black-panel-strong), rgba(0,0,0,.54)) !important;
+  border-color:var(--ice-line-soft) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 24px 70px rgba(0,0,0,.62),
+    0 0 28px rgba(111,220,255,.035) !important;
+  backdrop-filter:blur(18px) saturate(145%) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(145%) !important;
+}
+.leftRail{
+  border-left:1px solid rgba(222,246,255,.08) !important;
+  border-radius:0 !important;
+}
+.railTitle{
+  color:#93d7e5 !important;
+  text-shadow:0 0 18px rgba(147,215,229,.12);
+}
+/* unified translucent glass buttons */
+button,
+label.file,
+.tab,
+button.secondary,
+button.green,
+button.printInline{
+  color:#f8fcff !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.15) 40%, rgba(255,255,255,.065) 52%, rgba(255,255,255,.13) 100%),
+    linear-gradient(135deg, rgba(142,225,255,.19), rgba(255,205,196,.12) 52%, rgba(255,255,255,.075)) !important;
+  border:1px solid rgba(229,247,255,.34) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.62),
+    inset 0 -1px 0 rgba(255,255,255,.10),
+    0 12px 32px rgba(0,0,0,.45),
+    0 0 18px rgba(120,224,255,.10) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.50) !important;
+}
+button::before,
+label.file::before,
+.tab::before{
+  height:48% !important;
+  left:8px !important;
+  right:8px !important;
+  top:4px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.12), rgba(255,255,255,0)) !important;
+  opacity:.78 !important;
+}
+button:hover,
+label.file:hover,
+.tab:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(244,252,255,.52) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.42) 0%, rgba(255,255,255,.19) 40%, rgba(255,255,255,.08) 52%, rgba(255,255,255,.17) 100%),
+    linear-gradient(135deg, rgba(157,233,255,.26), rgba(255,216,205,.17) 52%, rgba(255,255,255,.095)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.74),
+    inset 0 -1px 0 rgba(255,255,255,.13),
+    0 16px 38px rgba(0,0,0,.54),
+    0 0 24px rgba(127,224,255,.18) !important;
+}
+button:active,
+label.file:active,
+.tab:active{
+  transform:translateY(1px) scale(.99) !important;
+  box-shadow:
+    inset 0 2px 10px rgba(0,0,0,.34),
+    0 7px 18px rgba(0,0,0,.42) !important;
+}
+button:disabled{
+  color:rgba(220,236,240,.48) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.025)),
+    rgba(255,255,255,.025) !important;
+  border-color:rgba(255,255,255,.07) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+/* upload button remains clearly visible but now icy translucent, not flat blue */
+label.file.uploadBlue,
+.toolbar label.file.uploadBlue{
+  color:#ffffff !important;
+  background:
+    linear-gradient(180deg, rgba(206,244,255,.72) 0%, rgba(102,201,255,.44) 42%, rgba(44,139,255,.27) 55%, rgba(255,255,255,.12) 100%),
+    linear-gradient(135deg, rgba(72,192,255,.42), rgba(255,214,203,.16)) !important;
+  border-color:rgba(210,244,255,.62) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.84),
+    inset 0 -1px 0 rgba(255,255,255,.15),
+    0 14px 36px rgba(38,152,255,.25),
+    0 0 0 1px rgba(70,194,255,.16),
+    0 0 26px rgba(96,220,255,.18) !important;
+}
+label.file.uploadBlue:hover,
+.toolbar label.file.uploadBlue:hover{
+  background:
+    linear-gradient(180deg, rgba(225,250,255,.82) 0%, rgba(117,211,255,.52) 42%, rgba(55,153,255,.34) 55%, rgba(255,255,255,.15) 100%),
+    linear-gradient(135deg, rgba(91,205,255,.50), rgba(255,220,208,.20)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.90),
+    0 17px 42px rgba(50,165,255,.32),
+    0 0 32px rgba(114,228,255,.24) !important;
+}
+button.toggleSwitch.is-active,
+button.green.printInline,
+button.printInline{
+  color:#ffffff !important;
+  background:
+    linear-gradient(180deg, rgba(235,255,252,.56) 0%, rgba(112,236,214,.36) 44%, rgba(39,205,170,.23) 55%, rgba(255,255,255,.10) 100%),
+    linear-gradient(135deg, rgba(121,237,255,.24), rgba(255,218,205,.12)) !important;
+  border-color:rgba(218,255,249,.45) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.70),
+    0 13px 32px rgba(0,0,0,.44),
+    0 0 24px rgba(60,233,202,.15) !important;
+}
+button.toggleSwitch.is-active::after,
+button.toggleSwitch.is-off::after{
+  background:rgba(255,255,255,.18) !important;
+  color:#f8fcff !important;
+  border:1px solid rgba(255,255,255,.16);
+}
+.tab.active{
+  color:#11191d !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.88), rgba(218,241,246,.66)),
+    linear-gradient(135deg, rgba(155,229,255,.34), rgba(255,218,207,.22)) !important;
+  border-color:rgba(255,255,255,.64) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.40) !important;
+}
+.scoreBox{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.87), rgba(224,241,245,.78)),
+    linear-gradient(135deg, rgba(154,228,255,.30), rgba(255,220,210,.18)) !important;
+  color:#10191b !important;
+  border:1px solid rgba(255,255,255,.48) !important;
+  box-shadow:0 18px 46px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.65) !important;
+}
+.metric{border-bottom-color:rgba(255,255,255,.07) !important;}
+.metric .name{color:#d5e7eb !important;}
+.miniBar{background:rgba(255,255,255,.14) !important;}
+.miniBar span{
+  background:linear-gradient(90deg, rgba(185,245,255,.80), rgba(111,232,255,.42), rgba(255,212,202,.34)) !important;
+}
+.bar{background:rgba(0,0,0,.12) !important;}
+.bar span{background:linear-gradient(90deg, #80e9ff, #e4faff, #ffd8cf) !important;}
+.controlCard input[type=range]{accent-color:#87eaff !important;}
+.controlCard select{
+  background:rgba(5,10,12,.58) !important;
+  color:#f5fbff !important;
+  border-color:rgba(216,244,255,.18) !important;
+}
+.stageOuter{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.018)), rgba(0,0,0,.45) !important;}
+.stage{background:#d3d3d3 !important;}
+.hint{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.105), rgba(255,255,255,.04)),
+    rgba(3,8,10,.66) !important;
+  border-color:rgba(225,248,255,.18) !important;
+  color:#f3fbff !important;
+}
+.chip{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.025)),
+    rgba(0,0,0,.42) !important;
+  border-color:rgba(219,244,255,.13) !important;
+  color:#eaf9ff !important;
+}
+
+
+
+/* ===== V6 requested refinements =====
+   - 상단 제목 중앙 정렬
+   - 툴바 버튼은 분석요약/안전평가 탭과 같은 반투명 유리 디자인
+   - 얼굴사진 업로드 버튼만 더 파란색 강조
+*/
+.topHeader h1{
+  width:100% !important;
+  text-align:center !important;
+}
+.topHeader > div:first-child{
+  width:100% !important;
+}
+
+.toolbar .primaryRow{
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+}
+
+/* Make all main toolbar buttons visually match the report tabs */
+.toolbar button,
+.toolbar label.file,
+.toolbar button.secondary,
+.toolbar button.toggleSwitch,
+.toolbar button.green,
+.toolbar button.printInline{
+  min-height:42px !important;
+  padding:12px 18px !important;
+  border-radius:16px !important;
+  color:#f8fcff !important;
+  font-size:13px !important;
+  font-weight:900 !important;
+  letter-spacing:-.01em !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.15) 40%, rgba(255,255,255,.065) 52%, rgba(255,255,255,.13) 100%),
+    linear-gradient(135deg, rgba(142,225,255,.19), rgba(255,205,196,.12) 52%, rgba(255,255,255,.075)) !important;
+  border:1px solid rgba(229,247,255,.34) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.62),
+    inset 0 -1px 0 rgba(255,255,255,.10),
+    0 12px 32px rgba(0,0,0,.45),
+    0 0 18px rgba(120,224,255,.10) !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.50) !important;
+  transform:none !important;
+}
+.toolbar button:hover,
+.toolbar label.file:hover,
+.toolbar button.secondary:hover,
+.toolbar button.toggleSwitch:hover,
+.toolbar button.green:hover,
+.toolbar button.printInline:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(244,252,255,.52) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.42) 0%, rgba(255,255,255,.19) 40%, rgba(255,255,255,.08) 52%, rgba(255,255,255,.17) 100%),
+    linear-gradient(135deg, rgba(157,233,255,.26), rgba(255,216,205,.17) 52%, rgba(255,255,255,.095)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.74),
+    inset 0 -1px 0 rgba(255,255,255,.13),
+    0 16px 38px rgba(0,0,0,.54),
+    0 0 24px rgba(127,224,255,.18) !important;
+}
+
+/* Active ON buttons should not turn green; keep same tab-like glass, only ON pill marks the state */
+.toolbar button.toggleSwitch.is-active,
+.toolbar button.toggleSwitch.is-off,
+.toolbar button.green.printInline,
+.toolbar button.printInline{
+  color:#f8fcff !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.15) 40%, rgba(255,255,255,.065) 52%, rgba(255,255,255,.13) 100%),
+    linear-gradient(135deg, rgba(142,225,255,.19), rgba(255,205,196,.12) 52%, rgba(255,255,255,.075)) !important;
+  border:1px solid rgba(229,247,255,.34) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.62),
+    inset 0 -1px 0 rgba(255,255,255,.10),
+    0 12px 32px rgba(0,0,0,.45),
+    0 0 18px rgba(120,224,255,.10) !important;
+}
+
+/* Only upload button: stronger blue glass */
+.toolbar label.file.uploadBlue{
+  color:#ffffff !important;
+  background:
+    linear-gradient(180deg, rgba(220,249,255,.86) 0%, rgba(105,210,255,.60) 40%, rgba(35,140,255,.42) 54%, rgba(31,95,214,.34) 100%),
+    linear-gradient(135deg, rgba(49,181,255,.58), rgba(134,232,255,.22) 48%, rgba(255,255,255,.08)) !important;
+  border-color:rgba(195,239,255,.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    inset 0 -1px 0 rgba(255,255,255,.16),
+    0 14px 36px rgba(28,143,255,.36),
+    0 0 28px rgba(98,220,255,.24) !important;
+  text-shadow:0 1px 2px rgba(0,32,78,.55) !important;
+}
+.toolbar label.file.uploadBlue:hover{
+  background:
+    linear-gradient(180deg, rgba(236,253,255,.92) 0%, rgba(126,220,255,.68) 40%, rgba(45,153,255,.50) 54%, rgba(37,106,224,.42) 100%),
+    linear-gradient(135deg, rgba(70,195,255,.66), rgba(148,239,255,.28) 48%, rgba(255,255,255,.10)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 17px 42px rgba(44,158,255,.45),
+    0 0 34px rgba(112,231,255,.32) !important;
+}
+
+
+
+/* ===== V9 requested refinement: AI 재분석 red glass button ===== */
+.toolbar button.reanalyzeRed,
+.toolbar button.reanalyzeRed:disabled{
+  color:#ffffff !important;
+  opacity:.96 !important;
+  background:
+    linear-gradient(180deg, rgba(255,238,238,.88) 0%, rgba(255,135,135,.62) 40%, rgba(236,42,63,.46) 54%, rgba(155,22,39,.38) 100%),
+    linear-gradient(135deg, rgba(255,74,98,.62), rgba(255,179,164,.26) 48%, rgba(255,255,255,.08)) !important;
+  border-color:rgba(255,210,210,.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.88),
+    inset 0 -1px 0 rgba(255,255,255,.16),
+    0 14px 36px rgba(255,52,82,.30),
+    0 0 28px rgba(255,104,120,.22) !important;
+  text-shadow:0 1px 2px rgba(85,0,16,.58) !important;
+}
+.toolbar button.reanalyzeRed:hover:not(:disabled){
+  background:
+    linear-gradient(180deg, rgba(255,247,247,.94) 0%, rgba(255,154,154,.70) 40%, rgba(246,55,77,.56) 54%, rgba(178,30,48,.46) 100%),
+    linear-gradient(135deg, rgba(255,88,112,.70), rgba(255,191,174,.32) 48%, rgba(255,255,255,.11)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 17px 42px rgba(255,72,98,.40),
+    0 0 34px rgba(255,121,135,.30) !important;
+}
+.toolbar button.reanalyzeRed:disabled{
+  cursor:not-allowed !important;
+  filter:saturate(.85) brightness(.92);
+}
+
+/* ===== V7 requested refinement: title slightly larger ===== */
+.topHeader h1{
+  font-size:36px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.07em !important;
+}
+@media(max-width:920px){
+  .topHeader h1{font-size:30px !important;}
+}
+
+
+
+/* ===== V10 luxury transparent glass button color palette =====
+   기능/배치 변경 없음: 버튼 색상과 유리 질감만 재조정
+   - upload: sapphire blue glass
+   - reanalyze: ruby glass
+   - line/danger/report/tabs: luxury smoked crystal glass
+*/
+.toolbar button,
+.toolbar label.file,
+.tabs .tab,
+button.secondary,
+button.green,
+button.printInline,
+button.toggleSwitch,
+label.file.uploadBlue,
+button.reanalyzeRed{
+  color:#f7fbff !important;
+  border:1px solid rgba(255,255,255,.24) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.34), rgba(255,255,255,0) 38%),
+    linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.075) 47%, rgba(255,255,255,.035) 52%, rgba(255,255,255,.10) 100%),
+    linear-gradient(135deg, rgba(88,97,112,.52), rgba(23,26,34,.58)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -1px 0 rgba(0,0,0,.20),
+    0 10px 24px rgba(0,0,0,.34),
+    0 0 18px rgba(255,255,255,.035) !important;
+  text-shadow:0 1px 1px rgba(0,0,0,.45) !important;
+  backdrop-filter:blur(16px) saturate(165%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(165%) !important;
+}
+
+.toolbar button:hover,
+.toolbar label.file:hover,
+.tabs .tab:hover,
+button.secondary:hover,
+button.green:hover,
+button.printInline:hover,
+button.toggleSwitch:hover,
+label.file.uploadBlue:hover,
+button.reanalyzeRed:hover:not(:disabled){
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.44), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.105) 48%, rgba(255,255,255,.055) 52%, rgba(255,255,255,.13) 100%),
+    linear-gradient(135deg, rgba(108,118,136,.58), rgba(28,31,41,.64)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.70),
+    inset 0 -1px 0 rgba(0,0,0,.18),
+    0 13px 30px rgba(0,0,0,.42),
+    0 0 24px rgba(255,255,255,.055) !important;
+}
+
+/* 얼굴사진 업로드: 더 선명한 사파이어 블루 유리 */
+.toolbar label.file.uploadBlue,
+label.file.uploadBlue{
+  color:#f4fbff !important;
+  border-color:rgba(170,220,255,.62) !important;
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(206,236,255,.34) 0%, rgba(73,169,255,.24) 48%, rgba(25,98,210,.18) 52%, rgba(63,150,255,.27) 100%),
+    linear-gradient(135deg, rgba(48,151,255,.74), rgba(11,45,110,.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.78),
+    inset 0 -1px 0 rgba(0,40,90,.35),
+    0 12px 30px rgba(30,120,255,.26),
+    0 0 22px rgba(75,174,255,.18) !important;
+}
+.toolbar label.file.uploadBlue:hover,
+label.file.uploadBlue:hover{
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.68), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(225,244,255,.40) 0%, rgba(90,188,255,.31) 48%, rgba(31,110,225,.23) 52%, rgba(73,170,255,.34) 100%),
+    linear-gradient(135deg, rgba(67,170,255,.82), rgba(13,58,134,.78)) !important;
+}
+
+/* AI 재분석: 루비 레드 유리 */
+.toolbar button.reanalyzeRed,
+.toolbar button.reanalyzeRed:disabled{
+  color:#fff7f7 !important;
+  border-color:rgba(255,190,190,.56) !important;
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.50), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,228,228,.32) 0%, rgba(255,107,116,.23) 48%, rgba(154,21,37,.20) 52%, rgba(255,89,104,.25) 100%),
+    linear-gradient(135deg, rgba(214,53,72,.72), rgba(92,12,27,.70)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.74),
+    inset 0 -1px 0 rgba(85,0,10,.32),
+    0 12px 30px rgba(209,35,55,.24),
+    0 0 22px rgba(255,95,111,.15) !important;
+}
+.toolbar button.reanalyzeRed:hover:not(:disabled){
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.63), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,240,240,.38) 0%, rgba(255,120,130,.30) 48%, rgba(165,28,44,.24) 52%, rgba(255,102,118,.34) 100%),
+    linear-gradient(135deg, rgba(232,62,83,.80), rgba(112,14,32,.76)) !important;
+}
+.toolbar button.reanalyzeRed:disabled{opacity:.62 !important; filter:saturate(.75) brightness(.88) !important; cursor:not-allowed !important;}
+
+/* 분석선: 오닉스-실버 글래스 */
+.toolbar #toggleBtn{
+  border-color:rgba(225,235,255,.34) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.38), rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, rgba(232,238,248,.20), rgba(126,138,158,.11) 48%, rgba(34,39,50,.13) 52%, rgba(128,140,158,.14)),
+    linear-gradient(135deg, rgba(93,103,121,.56), rgba(22,25,34,.62)) !important;
+}
+
+/* 혈관위험: 자수정 바이올렛 글래스 */
+.toolbar #dangerBtn{
+  border-color:rgba(230,205,255,.42) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.40), rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, rgba(245,229,255,.20), rgba(165,111,232,.13) 48%, rgba(55,31,90,.16) 52%, rgba(154,104,225,.15)),
+    linear-gradient(135deg, rgba(106,78,164,.55), rgba(27,22,48,.66)) !important;
+}
+
+/* 상담 리포트 출력: 샴페인 골드 글래스 */
+.toolbar #printBtn,
+.toolbar button.printInline,
+.toolbar button.green.printInline{
+  color:#fffaf0 !important;
+  border-color:rgba(255,232,176,.50) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.47), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,248,218,.25), rgba(215,177,88,.16) 48%, rgba(93,70,23,.16) 52%, rgba(225,187,92,.18)),
+    linear-gradient(135deg, rgba(176,136,56,.58), rgba(50,37,17,.70)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.70),
+    inset 0 -1px 0 rgba(79,52,0,.28),
+    0 12px 30px rgba(180,135,48,.19),
+    0 0 22px rgba(255,214,126,.13) !important;
+}
+
+/* 분석요약/안전평가/시술제안/기술정보: 흑진주 글래스, 활성 탭은 플래티넘 글래스 */
+.tabs .tab{
+  border-color:rgba(255,255,255,.18) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.28), rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05)),
+    linear-gradient(135deg, rgba(62,70,83,.54), rgba(13,15,20,.72)) !important;
+}
+.tabs .tab.active{
+  color:#111820 !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.58) !important;
+  border-color:rgba(255,255,255,.62) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.75), rgba(255,255,255,0) 45%),
+    linear-gradient(180deg, rgba(255,255,255,.88), rgba(216,223,230,.68) 48%, rgba(166,176,188,.44) 52%, rgba(236,241,246,.70)),
+    linear-gradient(135deg, rgba(243,247,250,.78), rgba(154,166,181,.72)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(0,0,0,.16),
+    0 12px 28px rgba(0,0,0,.28),
+    0 0 24px rgba(255,255,255,.10) !important;
+}
+
+/* ON/OFF pill만 은은하게 표시 */
+button.toggleSwitch.is-active::after{
+  background:rgba(255,255,255,.20) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+}
+button.toggleSwitch.is-off::after{
+  background:rgba(0,0,0,.20) !important;
+  color:rgba(255,255,255,.68) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+}
+
+
+/* ============================================================
+   V11 White Print-Friendly Apple Glass Theme
+   - 기능/배치 유지
+   - 전체 화면을 프린트 친화적 흰색 계열로 변경
+   - 모든 주요 버튼을 일관된 Apple-style 투명 유리 버튼으로 통일
+   ============================================================ */
+:root{
+  --white-bg:#ffffff;
+  --white-bg-soft:#f6f8fb;
+  --paper:#ffffff;
+  --paper2:rgba(255,255,255,.72);
+  --paper-line:rgba(20,40,60,.12);
+  --paper-line-strong:rgba(20,40,60,.20);
+  --ink:#152029;
+  --ink2:#334451;
+  --ink-muted:#667783;
+  --apple-blue:#007aff;
+  --apple-blue-soft:#e7f2ff;
+  --apple-shadow:0 18px 44px rgba(30,45,60,.10);
+}
+
+html,
+body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(0,122,255,.075), rgba(0,122,255,0) 32%),
+    radial-gradient(circle at 90% 10%, rgba(102,170,255,.055), rgba(102,170,255,0) 30%),
+    linear-gradient(180deg, #ffffff 0%, #f7f9fb 58%, #ffffff 100%) !important;
+  color:var(--ink) !important;
+}
+
+body.apple-glass-v2::before{
+  display:none !important;
+}
+
+.app{
+  background:transparent !important;
+}
+
+/* text */
+h1{
+  color:#121820 !important;
+  text-shadow:none !important;
+}
+.subtitle{
+  color:#526675 !important;
+}
+
+/* white paper-like panels */
+.toolbar,
+.stageOuter,
+.rightPanel,
+.leftRail,
+.controlCard,
+.scoreBox,
+.box,
+.rec,
+.checkitem,
+.status,
+.chip{
+  color:var(--ink) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.56)),
+    linear-gradient(180deg, rgba(247,250,253,.84), rgba(236,242,248,.46)) !important;
+  border-color:var(--paper-line) !important;
+  box-shadow:
+    0 16px 38px rgba(24,42,60,.08),
+    inset 0 1px 0 rgba(255,255,255,.95) !important;
+}
+
+.leftRail{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.90), rgba(246,249,252,.76)) !important;
+  border-left:1px solid rgba(20,40,60,.10) !important;
+}
+
+.rightRail{
+  background:transparent !important;
+}
+
+.railTitle{
+  color:#5d7180 !important;
+}
+
+h2,h3{
+  color:#152029 !important;
+}
+
+.small,
+.rec span,
+.rec label,
+.box span,
+.checkitem span{
+  color:#5e6f7b !important;
+}
+
+.metric{
+  border-bottom:1px solid rgba(20,40,60,.08) !important;
+}
+.metric .name,
+.metric .num{
+  color:#263744 !important;
+}
+
+.miniBar{
+  background:rgba(20,40,60,.08) !important;
+}
+.miniBar span,
+.bar span{
+  background:linear-gradient(90deg, rgba(0,122,255,.72), rgba(102,170,255,.52), rgba(65,200,160,.58)) !important;
+}
+
+.scoreBox{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,250,253,.86)) !important;
+  color:#152029 !important;
+  border:1px solid rgba(20,40,60,.11) !important;
+}
+.scoreTitle{color:#61717d !important;}
+.scoreNum{color:#111820 !important;}
+.badge{
+  color:#1d2a35 !important;
+  background:rgba(255,255,255,.78) !important;
+  border:1px solid rgba(20,40,60,.12) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8) !important;
+}
+
+.stage{
+  background:#eef1f4 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(20,40,60,.08),
+    0 12px 30px rgba(20,40,60,.06) !important;
+}
+.stage::after{
+  background:rgba(255,255,255,.70) !important;
+}
+
+.hint{
+  color:#314552 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.86), rgba(246,249,252,.72)) !important;
+  border:1px solid rgba(20,40,60,.11) !important;
+  box-shadow:0 10px 26px rgba(20,40,60,.08), inset 0 1px 0 rgba(255,255,255,.92) !important;
+}
+
+.chip{
+  color:#425766 !important;
+  background:rgba(255,255,255,.70) !important;
+}
+
+/* Unified Apple translucent buttons: toolbar + tabs */
+.toolbar button,
+.toolbar label.file,
+.tabs .tab,
+button.secondary,
+button.green,
+button.toggleSwitch,
+button.printInline,
+button.reanalyzeRed{
+  color:#1d2b36 !important;
+  border:1px solid rgba(22,42,60,.18) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,.95), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(247,250,253,.68) 48%, rgba(225,232,240,.54) 52%, rgba(255,255,255,.72) 100%),
+    linear-gradient(135deg, rgba(255,255,255,.78), rgba(220,229,238,.58)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -1px 0 rgba(0,0,0,.055),
+    0 9px 20px rgba(20,40,60,.10) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.64) !important;
+  backdrop-filter:blur(14px) saturate(145%);
+  -webkit-backdrop-filter:blur(14px) saturate(145%);
+}
+
+.toolbar button:hover:not(:disabled),
+.toolbar label.file:hover,
+.tabs .tab:hover{
+  transform:translateY(-1px) !important;
+  border-color:rgba(0,122,255,.28) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 46%),
+    linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(240,247,255,.78) 48%, rgba(211,228,246,.60) 52%, rgba(255,255,255,.82) 100%),
+    linear-gradient(135deg, rgba(255,255,255,.88), rgba(210,228,246,.64)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,0,0,.045),
+    0 12px 26px rgba(0,90,180,.12) !important;
+}
+
+.toolbar button:active,
+.toolbar label.file:active,
+.tabs .tab:active{
+  transform:translateY(1px) scale(.99) !important;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.08),
+    0 5px 12px rgba(20,40,60,.08) !important;
+}
+
+/* 업로드 버튼만 은은한 블루 하이라이트를 주되 동일한 유리 질감 유지 */
+.toolbar label.file{
+  color:#083a66 !important;
+  border-color:rgba(0,122,255,.30) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 45%),
+    linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(230,243,255,.78) 48%, rgba(190,221,255,.60) 52%, rgba(240,248,255,.82) 100%),
+    linear-gradient(135deg, rgba(237,247,255,.90), rgba(184,219,255,.62)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,92,180,.08),
+    0 10px 22px rgba(0,122,255,.12) !important;
+}
+
+/* active tabs and ON buttons */
+.tabs .tab.active,
+button.toggleSwitch.is-active{
+  color:#07365e !important;
+  border-color:rgba(0,122,255,.30) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(232,244,255,.80) 48%, rgba(198,225,255,.62) 52%, rgba(244,250,255,.84) 100%),
+    linear-gradient(135deg, rgba(255,255,255,.88), rgba(190,224,255,.66)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,92,180,.075),
+    0 12px 26px rgba(0,122,255,.12) !important;
+}
+
+/* disabled state */
+.toolbar button:disabled,
+button.reanalyzeRed:disabled{
+  opacity:.56 !important;
+  filter:grayscale(.15) saturate(.85) !important;
+  cursor:not-allowed !important;
+}
+
+/* ON/OFF pill */
+button.toggleSwitch.is-active::after,
+button.toggleSwitch.is-off::after{
+  background:rgba(255,255,255,.66) !important;
+  color:#325064 !important;
+  border:1px solid rgba(20,40,60,.12) !important;
+  text-shadow:none !important;
+}
+
+/* form controls */
+.controlCard label{
+  color:#2c3f4d !important;
+}
+.controlCard label b{
+  color:#102331 !important;
+}
+.controlCard select{
+  color:#1c2e3b !important;
+  background:rgba(255,255,255,.76) !important;
+  border-color:rgba(20,40,60,.14) !important;
+}
+.controlCard input[type=range]{
+  accent-color:#007aff !important;
+}
+
+/* risk pills on white */
+.riskPill{
+  color:#263744 !important;
+  background:rgba(255,255,255,.76) !important;
+  border:1px solid rgba(20,40,60,.12) !important;
+}
+.riskPill.red{color:#a12a2a !important;background:rgba(255,238,238,.85) !important;}
+.riskPill.amber{color:#90610c !important;background:rgba(255,247,224,.90) !important;}
+.riskPill.green{color:#126943 !important;background:rgba(232,255,244,.90) !important;}
+
+/* print still stays clean */
+@media print{
+  html,body{background:white !important;}
+  h1,h2,h3,.scoreNum,.metric .name,.metric .num{color:#111 !important;}
+  .rightPanel,.scoreBox,.box,.rec,.checkitem{
+    background:white !important;
+    box-shadow:none !important;
+  }
+}
+
+
+/* ============================================================
+   V12 Pure White Background + High Contrast Text
+   - 전체 배경은 순수 흰색
+   - 글자는 진한 색으로 선명하게
+   - 버튼은 일관된 Apple-style 투명 유리 버튼 유지
+   ============================================================ */
+html,
+body,
+body.apple-glass-v2{
+  background:#ffffff !important;
+  color:#111827 !important;
+}
+body.apple-glass-v2::before{display:none !important;}
+.app{background:#ffffff !important;}
+.centerCol,
+.rightRail,
+.leftRail{
+  background:#ffffff !important;
+}
+
+h1,
+h1 .brand,
+h2,
+h3,
+.scoreNum,
+.metric .name,
+.metric .num,
+.controlCard label,
+.controlCard label b,
+.railTitle{
+  color:#111827 !important;
+  text-shadow:none !important;
+}
+.subtitle,
+.small,
+.rec span,
+.rec label,
+.box span,
+.checkitem span,
+.scoreTitle,
+.chip,
+#statusText{
+  color:#374151 !important;
+  text-shadow:none !important;
+}
+
+.toolbar,
+.stageOuter,
+.rightPanel,
+.leftRail,
+.controlCard,
+.scoreBox,
+.box,
+.rec,
+.checkitem,
+.status,
+.chip,
+.hint{
+  color:#111827 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,252,255,.88)) !important;
+  border-color:rgba(17,24,39,.12) !important;
+  box-shadow:
+    0 12px 30px rgba(17,24,39,.07),
+    inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+
+.stage{
+  background:#f1f3f5 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(17,24,39,.10),
+    0 12px 28px rgba(17,24,39,.06) !important;
+}
+.stage::after{background:rgba(255,255,255,.82) !important;}
+
+/* 읽기 좋은 고대비 Apple 투명 버튼 */
+.toolbar button,
+.toolbar label.file,
+.tabs .tab,
+button.secondary,
+button.green,
+button.toggleSwitch,
+button.printInline,
+button.reanalyzeRed{
+  color:#111827 !important;
+  border:1px solid rgba(17,24,39,.18) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(247,249,252,.82) 48%, rgba(229,234,241,.68) 52%, rgba(255,255,255,.88) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(17,24,39,.06),
+    0 8px 18px rgba(17,24,39,.10) !important;
+  text-shadow:none !important;
+}
+.toolbar button:hover:not(:disabled),
+.toolbar label.file:hover,
+.tabs .tab:hover{
+  color:#0f172a !important;
+  border-color:rgba(0,122,255,.32) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 46%),
+    linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(240,247,255,.88) 48%, rgba(214,229,246,.74) 52%, rgba(255,255,255,.92) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(17,24,39,.05),
+    0 10px 22px rgba(0,90,180,.12) !important;
+}
+
+/* 얼굴사진 업로드: 같은 유리 질감 + 은은한 블루 강조 */
+.toolbar label.file,
+.toolbar label.file.uploadBlue,
+label.file.uploadBlue{
+  color:#07365e !important;
+  border-color:rgba(0,122,255,.34) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 45%),
+    linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(229,243,255,.88) 48%, rgba(187,219,255,.70) 52%, rgba(242,248,255,.92) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(0,92,180,.08),
+    0 9px 20px rgba(0,122,255,.14) !important;
+}
+
+/* AI 재분석: 흰 배경에서 읽기 좋은 은은한 로즈 글래스 */
+.toolbar button.reanalyzeRed,
+.toolbar button.reanalyzeRed:disabled{
+  color:#7f1d1d !important;
+  border-color:rgba(220,38,38,.26) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 45%),
+    linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,239,239,.90) 48%, rgba(255,205,205,.72) 52%, rgba(255,248,248,.92) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -1px 0 rgba(185,28,28,.08),
+    0 9px 20px rgba(220,38,38,.11) !important;
+  text-shadow:none !important;
+}
+
+.tabs .tab.active,
+button.toggleSwitch.is-active{
+  color:#07365e !important;
+  border-color:rgba(0,122,255,.34) !important;
+  background:
+    radial-gradient(circle at 28% 0%, rgba(255,255,255,1), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(232,244,255,.90) 48%, rgba(198,225,255,.72) 52%, rgba(244,250,255,.92) 100%) !important;
+}
+button.toggleSwitch.is-active::after,
+button.toggleSwitch.is-off::after{
+  color:#1f2937 !important;
+  background:rgba(255,255,255,.75) !important;
+  border:1px solid rgba(17,24,39,.14) !important;
+  text-shadow:none !important;
+}
+
+.controlCard select{
+  color:#111827 !important;
+  background:#ffffff !important;
+  border-color:rgba(17,24,39,.16) !important;
+}
+.metric{border-bottom-color:rgba(17,24,39,.10) !important;}
+.miniBar{background:rgba(17,24,39,.09) !important;}
+.scoreBox{border-color:rgba(17,24,39,.12) !important;}
+.badge{
+  color:#111827 !important;
+  background:#ffffff !important;
+  border:1px solid rgba(17,24,39,.14) !important;
+  text-shadow:none !important;
+}
+
+
+/* ===== Webcam camera capture modal ===== */
+.cameraModal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+}
+.cameraBox{
+  width:min(880px,96vw);
+  max-height:92vh;
+  overflow:auto;
+  border-radius:28px;
+  padding:18px;
+  color:#f7fbff;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.14), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.025)),
+    rgba(5,8,12,.88);
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 30px 90px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.16);
+}
+.cameraTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.cameraTop h2{
+  margin:0 0 4px !important;
+  font-size:22px !important;
+  letter-spacing:-.04em !important;
+}
+.cameraTop p{
+  margin:0;
+  color:#bfd2d8;
+  font-size:13px;
+  line-height:1.55;
+  font-weight:750;
+}
+.cameraPreview{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border-radius:20px;
+  background:#05080a;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 18px 48px rgba(0,0,0,.35);
+}
+.cameraPreview video,
+.cameraPreview canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.cameraGuide{
+  position:absolute;
+  inset:8%;
+  border:2px dashed rgba(255,255,255,.46);
+  border-radius:50%;
+  pointer-events:none;
+  box-shadow:0 0 0 999px rgba(0,0,0,.06);
+}
+.cameraActions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-top:14px;
+}
+.cameraNote{
+  margin:12px 2px 0;
+  color:#bfd2d8;
+  font-size:12px;
+  line-height:1.55;
+  text-align:center;
+}
+button.cameraBlue{
+  border-color:rgba(170,220,255,.62) !important;
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.55), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(206,236,255,.34) 0%, rgba(73,169,255,.24) 48%, rgba(25,98,210,.18) 52%, rgba(63,150,255,.27) 100%),
+    linear-gradient(135deg, rgba(48,151,255,.74), rgba(11,45,110,.72)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78), 0 12px 30px rgba(30,120,255,.24) !important;
+}
+button.cameraUse{
+  border-color:rgba(218,255,249,.45) !important;
+  background:
+    radial-gradient(circle at 32% 0%, rgba(255,255,255,.50), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(235,255,252,.44), rgba(39,205,170,.22)),
+    linear-gradient(135deg, rgba(121,237,255,.28), rgba(18,120,94,.52)) !important;
+}
+@media print{.cameraModal{display:none !important;}}
+
+/* ===== Save / Load session buttons ===== */
+.toolbar #saveStateBtn{min-width:112px !important;}
+.toolbar label.stateLoadGlass{min-width:126px !important;text-align:center !important;}
+.toolbar #resetBtn{min-width:126px !important;}
+.toolbar button.resetGlass{
+  border-color:rgba(255,230,170,.38) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,.32), rgba(255,255,255,0) 38%),
+    linear-gradient(180deg, rgba(255,241,195,.17), rgba(255,255,255,.045)),
+    linear-gradient(135deg, rgba(95,77,38,.48), rgba(24,24,28,.60)) !important;
+}
+
+
+  
+
+/* ===== V11 unified button color: match active report tab (분석요약) ===== */
+.toolbar button,
+.toolbar label.file,
+.toolbar .file,
+.toolbar button.secondary,
+.toolbar button.toggleSwitch,
+.toolbar button.printInline,
+.toolbar button.green,
+.toolbar button.cameraBlue,
+.toolbar button.reanalyzeRed,
+.toolbar label.file.uploadBlue,
+.toolbar label.file.stateLoadGlass,
+.toolbar button.resetGlass{
+  color:#11191d !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.94), rgba(224,241,246,.72)),
+    linear-gradient(135deg, rgba(155,229,255,.32), rgba(255,218,207,.22)) !important;
+  border:1px solid rgba(255,255,255,.64) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    inset 0 -1px 0 rgba(0,0,0,.07),
+    0 10px 24px rgba(0,0,0,.30),
+    0 0 18px rgba(210,240,255,.08) !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.42) !important;
+}
+.toolbar button:hover,
+.toolbar label.file:hover,
+.toolbar .file:hover,
+.toolbar button.secondary:hover,
+.toolbar button.toggleSwitch:hover,
+.toolbar button.printInline:hover,
+.toolbar button.green:hover,
+.toolbar button.cameraBlue:hover,
+.toolbar button.reanalyzeRed:hover:not(:disabled),
+.toolbar label.file.uploadBlue:hover,
+.toolbar label.file.stateLoadGlass:hover,
+.toolbar button.resetGlass:hover{
+  color:#11191d !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(233,247,251,.82)),
+    linear-gradient(135deg, rgba(171,235,255,.38), rgba(255,228,219,.26)) !important;
+  border-color:rgba(255,255,255,.78) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 -1px 0 rgba(0,0,0,.05),
+    0 13px 30px rgba(0,0,0,.36),
+    0 0 24px rgba(210,240,255,.12) !important;
+}
+.toolbar button:disabled,
+.toolbar button.reanalyzeRed:disabled{
+  opacity:.58 !important;
+  color:#38434a !important;
+  cursor:not-allowed !important;
+  filter:none !important;
+}
+.toolbar button.toggleSwitch.is-active,
+.toolbar button.toggleSwitch.is-off{
+  color:#11191d !important;
+}
+.toolbar button.toggleSwitch.is-active::after,
+.toolbar button.toggleSwitch.is-off::after{
+  color:#11191d !important;
+  background:rgba(255,255,255,.55) !important;
+  border:1px solid rgba(0,0,0,.08) !important;
+}
+
+
+/* ===== V12 portrait capture & drag-drop upload refinement ===== */
+.stageOuter{
+  max-width:620px !important;
+  margin:0 auto !important;
+  padding:16px !important;
+}
+.stage{
+  width:100% !important;
+  max-width:560px !important;
+  margin:0 auto !important;
+  aspect-ratio:3 / 4 !important;
+  border-radius:28px !important;
+  background:
+    radial-gradient(ellipse at 50% 36%, rgba(255,255,255,.78), rgba(210,218,220,.92) 58%, rgba(185,190,194,.92) 100%) !important;
+  cursor:pointer;
+}
+.stage::after{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  top:46% !important;
+  width:58% !important;
+  height:70% !important;
+  transform:translate(-50%,-50%) !important;
+  border:2px dashed rgba(17,25,29,.22) !important;
+  border-radius:48% 48% 44% 44% / 58% 58% 42% 42% !important;
+  background:rgba(255,255,255,.12) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 999px rgba(255,255,255,.02) !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+}
+.stage.has-image::after{
+  display:none !important;
+}
+.stage.is-dragover{
+  outline:3px solid rgba(255,255,255,.82);
+  outline-offset:6px;
+  box-shadow:0 0 0 6px rgba(120,210,255,.18), 0 24px 70px rgba(0,0,0,.42) !important;
+}
+.stage.is-dragover::after{
+  border-color:rgba(40,130,255,.78) !important;
+  background:rgba(120,210,255,.16) !important;
+}
+.cameraBox{
+  width:min(640px,96vw) !important;
+}
+.cameraPreview{
+  width:min(430px,92vw) !important;
+  aspect-ratio:3 / 4 !important;
+  margin:0 auto !important;
+  border-radius:30px !important;
+}
+.cameraPreview video,
+.cameraPreview canvas{
+  object-fit:cover !important;
+}
+.cameraGuide{
+  left:50% !important;
+  top:48% !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:56% !important;
+  height:72% !important;
+  transform:translate(-50%,-50%) !important;
+  border:2.5px dashed rgba(255,255,255,.72) !important;
+  border-radius:48% 48% 44% 44% / 58% 58% 42% 42% !important;
+  box-shadow:0 0 0 999px rgba(0,0,0,.18), inset 0 0 40px rgba(255,255,255,.04) !important;
+}
+.cameraPreview.is-captured .cameraGuide{
+  display:none !important;
+}
+@media(max-width:860px){
+  .stageOuter{max-width:96vw !important;}
+  .stage{max-width:92vw !important;}
+  .cameraPreview{width:min(380px,88vw) !important;}
+}
+
+
+/* ===== V13 requested refinement: symmetric portrait face oval guide =====
+   - 웹캠 촬영 화면의 가이드를 위/아래가 같은 세로형 얼굴 타원으로 수정
+   - 첫 업로드 화면의 점선 가이드도 같은 비율로 맞춰 일관성 유지
+*/
+.stage::after{
+  left:50% !important;
+  top:48% !important;
+  width:56% !important;
+  height:72% !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:50% / 50% !important;
+}
+.cameraGuide{
+  left:50% !important;
+  top:48% !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:56% !important;
+  height:72% !important;
+  transform:translate(-50%,-50%) !important;
+  border-radius:50% / 50% !important;
+}
+
+
+
+/* ===== V14 requested refinement: slightly wider face oval guide =====
+   - 세로 길이는 유지하고, 가로 지름만 약간 넓힘
+*/
+.stage::after{
+  width:62% !important;
+  height:72% !important;
+}
+.cameraGuide{
+  width:62% !important;
+  height:72% !important;
+}
+
+
+
+/* ===== V13 requested refinement: toolbar buttons match 분석요약 tab size =====
+.toolbar .primaryRow{
+  gap:8px !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.toolbar .primaryRow > button,
+.toolbar .primaryRow > label.file{
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:82px !important;
+  min-width:82px !important;
+  max-width:82px !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:12px 8px !important;
+  font-size:12px !important;
+  line-height:1 !important;
+  border-radius:16px !important;
+  flex:0 0 82px !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+.toolbar .primaryRow > label.file input{
+  display:none !important;
+}
+.toolbar .primaryRow > button.toggleSwitch.is-active::after,
+.toolbar .primaryRow > button.toggleSwitch.is-off::after{
+  margin-left:4px !important;
+  padding:2px 4px !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  border-radius:999px !important;
+}
+.toolbar .primaryRow > button::before,
+.toolbar .primaryRow > label.file::before{
+  left:7px !important;
+  right:7px !important;
+}
+@media(max-width:720px){
+  .toolbar .primaryRow > button,
+  .toolbar .primaryRow > label.file{
+    width:82px !important;
+    min-width:82px !important;
+    max-width:82px !important;
+    flex:0 0 82px !important;
+  }
+}
+
+*/
+
+/* ===== V15 requested refinement: tight horizontal text-fit buttons =====
+   촬영 버튼처럼 불러오기·저장·리셋·프린트 버튼의 좌우 여백을 제거
+   기능과 순서는 그대로 유지
+*/
+.toolbar .primaryRow > label.stateLoadGlass,
+.toolbar .primaryRow > #saveStateBtn,
+.toolbar .primaryRow > #resetBtn,
+.toolbar .primaryRow > #printBtn{
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  flex:0 0 auto !important;
+  padding-left:0 !important;
+  padding-right:0 !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+.toolbar .primaryRow > label.stateLoadGlass::before,
+.toolbar .primaryRow > #saveStateBtn::before,
+.toolbar .primaryRow > #resetBtn::before,
+.toolbar .primaryRow > #printBtn::before{
+  left:0 !important;
+  right:0 !important;
+}
+@media(max-width:720px){
+  .toolbar .primaryRow > label.stateLoadGlass,
+  .toolbar .primaryRow > #saveStateBtn,
+  .toolbar .primaryRow > #resetBtn,
+  .toolbar .primaryRow > #printBtn{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    flex:0 0 auto !important;
+    padding-left:0 !important;
+    padding-right:0 !important;
+  }
+}
+
+
+
+/* ===== V16 requested refinement: match 촬영 button side padding =====
+   불러오기·저장·리셋·프린트는 촬영 버튼처럼
+   글자 양옆에 같은 여백을 유지하면서 내용 폭에 맞춤
+*/
+.toolbar .primaryRow > label.stateLoadGlass,
+.toolbar .primaryRow > #saveStateBtn,
+.toolbar .primaryRow > #resetBtn,
+.toolbar .primaryRow > #printBtn{
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  flex:0 0 auto !important;
+  padding-left:18px !important;
+  padding-right:18px !important;
+  text-align:center !important;
+  white-space:nowrap !important;
+}
+.toolbar .primaryRow > label.stateLoadGlass::before,
+.toolbar .primaryRow > #saveStateBtn::before,
+.toolbar .primaryRow > #resetBtn::before,
+.toolbar .primaryRow > #printBtn::before{
+  left:8px !important;
+  right:8px !important;
+}
+@media(max-width:720px){
+  .toolbar .primaryRow > label.stateLoadGlass,
+  .toolbar .primaryRow > #saveStateBtn,
+  .toolbar .primaryRow > #resetBtn,
+  .toolbar .primaryRow > #printBtn{
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    flex:0 0 auto !important;
+    padding-left:18px !important;
+    padding-right:18px !important;
+  }
+}
+
+
+/* ===== V16 uploaded photo pan refinement =====
+   - 사진 업로드 후 캔버스에서 이미지 자체를 좌우·상하로 드래그 이동
+   - 랜드마크 점 드래그 보정 기능은 그대로 유지
+*/
+.stage.has-image{
+  cursor:grab !important;
+}
+.stage.has-image.is-panning{
+  cursor:grabbing !important;
+}
+.stage.has-image canvas{
+  cursor:inherit !important;
+}
+
+</style>
+</head>
+<body class="apple-glass-v2">
+<div class="app">
+  <main class="centerCol">
+    <header class="topHeader">
+      <div>
+        <h1><span class="brand">Dr. YOUNG</span> Clinical Vision</h1>
+       <br>
+      </div>
+      <div class="toolbar">
+        <div class="toolbarRow primaryRow">
+          <label class="file uploadBlue">사진업로드<input id="fileInput" type="file" accept="image/*"></label>
+          <button class="secondary cameraBlue" id="cameraBtn" type="button">촬영</button>
+          <label class="file stateLoadGlass">불러오기<input id="stateInput" type="file" accept="application/json,.json"></label>
+          <button class="secondary" id="saveStateBtn" type="button" disabled>저장</button>
+          <button class="secondary resetGlass" id="resetBtn" type="button">리셋</button>
+          <button class="secondary toggleSwitch is-active" id="toggleBtn" aria-pressed="true">분석선</button>
+          <button class="secondary toggleSwitch is-active" id="dangerBtn" aria-pressed="true">혈관위험</button>
+          <button class="green printInline" id="printBtn">프린트</button>
+          <button class="secondary reanalyzeRed" id="reanalyzeBtn" disabled>AI 재분석</button>
+          <input id="cameraFileInput" type="file" accept="image/*" capture="user" class="hidden" aria-hidden="true">
+        </div>
+      </div>
+    </header>
+
+    <section class="stageOuter">
+      <div class="stage" id="stage">
+        <canvas id="photo"></canvas>
+        <canvas id="overlay"></canvas>
+      </div>
+    </section>
+    <div class="hint" id="hint">정면·무표정·균일 조명 사진을 권장합니다. 사진 업로드 후 얼굴사진을 마우스나 손가락으로 드래그하면 좌우·상하 위치를 조정할 수 있습니다. 얼굴사진 파일을 화면에 끌어 놓아도 바로 업로드·분석됩니다. 분석 후 빨간선은 주름/접힘, 파란선은 리프팅 벡터, 보라색 반투명 영역은 혈관 위험 부위입니다.</div>
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">MediaPipe FaceMesh 준비 중…</span></div>
+    
+  </main>
+
+  <aside class="rightRail">
+    <section class="rightPanel">
+      <div class="tabs">
+        <button class="tab active" data-tab="summary">분석요약</button>
+        <button class="tab" data-tab="safety">안전평가</button>
+        <button class="tab" data-tab="plan">시술제안</button>
+        <button class="tab" data-tab="tech">기술정보</button>
+      </div>
+
+      <div id="summaryTab">
+        <h2>Wrinkle & Aging Report</h2>
+        <div class="scoreBox">
+          <div class="scoreTop"><div><div class="scoreTitle">Aging Severity Index</div><div class="scoreNum" id="totalScore">-</div></div><div class="badge" id="grade">분석 대기</div></div>
+          <div class="bar"><span id="scoreBar"></span></div>
+        </div>
+        <div id="metrics"></div>
+        <div class="analysisGrid">
+          <div class="box"><b>FaceMesh</b><span id="landmarkInfo">랜드마크 대기 중</span></div>
+          <div class="box"><b>Wrinkle Engine</b><span>Sobel 엣지·명암 대비·방향성 텍스처 기반 자동 추정</span></div>
+        </div>
+          </div>
+
+      <div id="safetyTab" class="hidden">
+        <h2>촬영·해부학·금기 안전평가</h2>
+        <div id="safetySummary" class="recommend"></div>
+        <h3>시술 금기/주의 체크리스트</h3>
+        <div class="checklist" id="contraList">
+          <label class="checkitem"><input type="checkbox" data-risk="high" data-name="임신·수유 중"><span>임신·수유 중 또는 가능성 있음</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="high" data-name="활동성 감염"><span>시술 부위 활동성 감염, 헤르페스, 염증성 여드름 악화</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="high" data-name="필러/톡신 알레르기"><span>보툴리눔 톡신, 필러, 국소마취제, 스킨부스터 성분 알레르기 병력</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="high" data-name="신경근육 질환"><span>중증 근무력증 등 신경근육 질환 또는 관련 약물 복용</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="medium" data-name="항응고제/출혈 경향"><span>항응고제·항혈소판제 복용, 출혈 경향, 쉽게 멍드는 체질</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="medium" data-name="켈로이드/비후성 반흔"><span>켈로이드·비후성 반흔 병력</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="medium" data-name="자가면역/면역저하"><span>자가면역질환, 면역저하, 조절되지 않는 당뇨</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="medium" data-name="최근 시술/수술"><span>최근 2~4주 내 같은 부위 시술, 수술, 치과 감염/발치/임플란트 수술</span></label>
+          <label class="checkitem"><input type="checkbox" data-risk="medium" data-name="색소침착 위험"><span>기미·PIH 병력, 강한 햇빛 노출 예정, 레이저 후 색소침착 우려</span></label>
+        </div>
+      </div>
+
+      <div id="planTab" class="hidden">
+        <h2>추천 비수술 시술 플랜</h2>
+        <div id="recs" class="recommend"></div>
+        <h3>환자 상담 설명 문구</h3>
+        <div class="rec"><span id="scriptText">사진을 업로드하면 상담 문구가 생성됩니다.</span></div>
+      </div>
+
+      <div id="techTab" class="hidden">
+        <h2>자동 분석 구조</h2>
+        <div class="rec"><strong>1. 얼굴 랜드마크 인식</strong><span>MediaPipe FaceMesh가 얼굴 윤곽, 눈, 코, 입술, 턱 좌표를 추출합니다.</span></div>
+        <div class="rec"><strong>2. 촬영 품질 평가</strong><span>밝기 평균, 과노출/저노출, 좌우 조명 편차, 얼굴 크기, 중심 위치, 좌우 대칭을 평가해 조명·렌즈왜곡·촬영각 오류를 표시합니다.</span></div>
+        <div class="rec"><strong>3. 표정 평가</strong><span>입꼬리, 입 벌림, 눈 개폐, 눈썹 높이 차이를 이용해 미소·찡그림·눈가 긴장 여부를 추정합니다.</span></div>
+        <div class="rec"><strong>4. 혈관 위험 부위</strong><span>미간·코·눈밑·관자·팔자·입술 주변·턱끝 등 주입 위험 부위를 별도 오버레이로 표시합니다.</span></div>
+      </div>
+    </section>
+  </aside>
+
+  <aside class="leftRail">
+    <div class="railTitle">Analysis Controls</div>
+    <div class="controlCard"><label>자동 분석 민감도 <b id="vSensitivity">100%</b></label><input id="sensitivity" type="range" min="70" max="140" value="100"></div>
+    <div class="controlCard"><label>피부 두께 평가 <b id="vSkinThickness">보통</b></label><select id="skinThickness"><option value="thin">얇음 · 멍/비침 위험↑</option><option value="normal" selected>보통</option><option value="thick">두꺼움 · 반응 저하 가능</option><option value="unknown">사진만으로 판단 불가</option></select></div>
+    <div class="controlCard"><label>수동 보정: 이마 <b id="vForehead">-</b></label><input class="manual" data-k="forehead" type="range" min="0" max="100" value="0"></div>
+    <div class="controlCard"><label>수동 보정: 눈가 <b id="vCrow">-</b></label><input class="manual" data-k="crow" type="range" min="0" max="100" value="0"></div>
+    <div class="controlCard"><label>수동 보정: 입가 <b id="vMouth">-</b></label><input class="manual" data-k="mouth" type="range" min="0" max="100" value="0"></div>
+    <div class="controlCard"><label>오버레이 투명도 <b id="vAlpha">92%</b></label><input id="alpha" type="range" min="20" max="100" value="92"></div>
+    <div class="controlCard"><label>치료 목표 강도 <b id="vGoal">자연스럽게</b></label><select id="goal"><option value="natural" selected>자연스럽게</option><option value="balanced">균형 개선</option><option value="intensive">적극 개선</option></select></div>
+    <div class="controlCard"><label>수동 보정: 미간 <b id="vGlabella">-</b></label><input class="manual" data-k="glabella" type="range" min="0" max="100" value="0"></div>
+    <div class="controlCard"><label>수동 보정: 팔자 <b id="vNaso">-</b></label><input class="manual" data-k="naso" type="range" min="0" max="100" value="0"></div>
+    <div class="controlCard"><label>수동 보정: 턱선 <b id="vJaw">-</b></label><input class="manual" data-k="jaw" type="range" min="0" max="100" value="0"></div>
+  </aside>
+</div>
+
+<div class="cameraModal hidden" id="cameraModal" aria-hidden="true">
+  <div class="cameraBox" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
+    <div class="cameraTop">
+      <div>
+        <h2 id="cameraTitle">웹캠으로 얼굴사진 촬영</h2>
+        <p>정면·무표정·균일 조명 상태에서 얼굴이 세로형 얼굴 가이드 안에 들어오도록 맞춘 뒤 촬영하세요.</p>
+      </div>
+      <button class="secondary" id="cameraCloseBtn" type="button">닫기</button>
+    </div>
+    <div class="cameraPreview">
+      <video id="cameraVideo" autoplay playsinline muted></video>
+      <canvas id="cameraCanvas" class="hidden"></canvas>
+      <div class="cameraGuide" aria-hidden="true"></div>
+    </div>
+    <div class="cameraActions">
+      <button class="secondary cameraBlue" id="cameraSnapBtn" type="button">촬영 후 분석</button>
+      <button class="secondary cameraUse hidden" id="cameraUseBtn" type="button" disabled>이 사진 사용</button>
+      <button class="secondary hidden" id="cameraRetakeBtn" type="button" disabled>다시 촬영</button>
+      <button class="secondary" id="cameraCancelBtn" type="button">취소</button>
+    </div>
+    <p class="cameraNote" id="cameraSecurityNote">카메라 기능은 브라우저 보안상 HTTPS 또는 localhost에서만 작동합니다. 워드프레스 iframe 연결 시 <code>allow="camera *; fullscreen"</code>을 넣고, 브라우저 주소창의 카메라 권한을 허용하세요.</p>
+  </div>
+</div>
+
+<script>
+const stage=document.getElementById('stage'),photo=document.getElementById('photo'),overlay=document.getElementById('overlay');
+const pctx=photo.getContext('2d'),octx=overlay.getContext('2d');
+const fileInput=document.getElementById('fileInput'),stateInput=document.getElementById('stateInput'),cameraFileInput=document.getElementById('cameraFileInput'),resetBtn=document.getElementById('resetBtn'),statusDot=document.getElementById('statusDot'),statusText=document.getElementById('statusText'),reanalyzeBtn=document.getElementById('reanalyzeBtn'),saveStateBtn=document.getElementById('saveStateBtn');
+const cameraBtn=document.getElementById('cameraBtn'),cameraModal=document.getElementById('cameraModal'),cameraVideo=document.getElementById('cameraVideo'),cameraCanvas=document.getElementById('cameraCanvas'),cameraSnapBtn=document.getElementById('cameraSnapBtn'),cameraUseBtn=document.getElementById('cameraUseBtn'),cameraRetakeBtn=document.getElementById('cameraRetakeBtn'),cameraCancelBtn=document.getElementById('cameraCancelBtn'),cameraCloseBtn=document.getElementById('cameraCloseBtn');
+const metricsEl=document.getElementById('metrics'),recsEl=document.getElementById('recs'),landmarkInfo=document.getElementById('landmarkInfo'),safetySummary=document.getElementById('safetySummary');
+let image=null,mp=null,landmarks=null,showOverlay=true,showDanger=true,scale=1,ox=0,oy=0;
+let currentImageDataUrl=null,currentImageName='';
+let cameraStream=null,capturedCameraDataUrl=null;
+let analysisToken=0;
+let scores={forehead:0,glabella:0,crow:0,naso:0,mouth:0,jaw:0,texture:0};
+let manualTouched={forehead:false,glabella:false,crow:false,naso:false,mouth:false,jaw:false};
+let safety={lighting:null,distortion:null,expression:null,skin:null,contraindications:null,overall:null};
+let dragIndex=null,drawPoints=[],imageDrag=null;
+function setStatus(type,text){statusDot.className='dot '+(type||'');statusText.textContent=text;}function cap(k){return k.charAt(0).toUpperCase()+k.slice(1);}function clamp(v,min=0,max=1){return Math.max(min,Math.min(max,v));}
+async function initFaceMesh(){if(mp)return mp;if(typeof FaceMesh==='undefined')throw new Error('FaceMesh 라이브러리를 불러오지 못했습니다. 인터넷 연결 또는 CDN 차단 여부를 확인하세요.');setStatus('','MediaPipe FaceMesh 모델을 불러오는 중…');mp=new FaceMesh({locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});mp.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:.45,minTrackingConfidence:.45,staticImageMode:true});mp.onResults(onFaceMeshResults);return mp;}
+function onFaceMeshResults(results){
+  try{
+    if(results.multiFaceLandmarks&&results.multiFaceLandmarks.length){
+      landmarks=results.multiFaceLandmarks[0];
+      buildDraggablePoints();
+      runAllAnalysis(false);
+      setStatus('ok',`얼굴 자동 인식 완료: ${landmarks.length}개 랜드마크 감지`);
+      reanalyzeBtn.disabled=false;
+      saveStateBtn.disabled=false;
+    }else{
+      useEstimatedAnalysis('얼굴을 자동으로 찾지 못했습니다. 사진은 화면에 표시했고, 표준 정면 얼굴 좌표로 임시 분석을 생성했습니다. 정확도를 위해 밝은 정면 사진으로 다시 촬영하세요.');
+      return;
+    }
+  }catch(err){
+    console.error(err);
+    useEstimatedAnalysis('자동 분석 중 오류가 발생했습니다. 사진은 유지하고 표준 정면 얼굴 좌표로 임시 분석을 생성했습니다.');
+    return;
+  }
+  draw();
+}
+function landmarkIndexList(){return[10,9,33,133,362,263,1,4,61,291,13,14,152,234,454,127,356,70,300,205,425,172,397];}function buildDraggablePoints(){drawPoints=landmarkIndexList().map(i=>({i,x:landmarks[i].x,y:landmarks[i].y}));}function buildFallbackPoints(){drawPoints=[{i:10,x:.50,y:.16},{i:33,x:.36,y:.43},{i:263,x:.64,y:.43},{i:1,x:.50,y:.56},{i:61,x:.43,y:.72},{i:291,x:.57,y:.72},{i:152,x:.50,y:.88},{i:234,x:.31,y:.57},{i:454,x:.69,y:.57}];}
+function buildEstimatedFaceLandmarks(){
+  const pts=Array.from({length:478},()=>({x:.5,y:.5,z:0}));
+  const set=(i,x,y,z=0)=>{pts[i]={x:clamp(x),y:clamp(y),z};};
+  // 표준 정면 얼굴 좌표: FaceMesh가 실패할 때 화면과 분석을 비우지 않기 위한 안전한 보조 좌표입니다.
+  [[10,.50,.16],[338,.56,.17],[297,.61,.20],[332,.66,.25],[284,.70,.32],[251,.72,.39],[389,.72,.48],[356,.70,.56],[454,.68,.62],[323,.66,.69],[361,.62,.76],[288,.58,.82],[397,.55,.86],[365,.52,.88],[379,.50,.90],[378,.48,.88],[400,.45,.86],[377,.42,.82],[152,.50,.90],[148,.48,.88],[176,.45,.86],[149,.42,.82],[150,.38,.76],[136,.34,.69],[172,.32,.62],[58,.30,.56],[132,.28,.48],[93,.28,.39],[234,.32,.62],[127,.30,.50],[162,.31,.42],[21,.34,.32],[54,.38,.25],[103,.43,.20],[67,.45,.18],[109,.47,.17],
+  [9,.50,.34],[107,.46,.34],[336,.54,.34],[55,.44,.37],[285,.56,.37],[70,.42,.31],[300,.58,.31],
+  [33,.38,.43],[7,.36,.43],[163,.37,.45],[144,.39,.46],[145,.42,.46],[153,.45,.46],[154,.47,.45],[155,.46,.43],[133,.45,.42],[173,.43,.41],[157,.42,.40],[158,.40,.40],[159,.39,.40],[160,.38,.41],[161,.37,.42],[246,.36,.42],
+  [263,.62,.43],[249,.64,.43],[390,.63,.45],[373,.61,.46],[374,.58,.46],[380,.55,.46],[381,.53,.45],[382,.54,.43],[362,.55,.42],[398,.57,.41],[384,.58,.40],[385,.60,.40],[386,.61,.40],[387,.62,.41],[388,.63,.42],[466,.64,.42],
+  [168,.50,.45],[6,.50,.48],[197,.50,.51],[195,.50,.53],[5,.50,.55],[4,.50,.57],[1,.50,.59],[19,.50,.62],[94,.50,.65],[2,.50,.68],
+  [98,.41,.63],[205,.39,.66],[187,.43,.68],[39,.45,.60],[327,.59,.63],[425,.61,.66],[411,.57,.68],[269,.55,.60],
+  [61,.42,.73],[146,.43,.75],[91,.45,.77],[181,.47,.78],[84,.49,.79],[17,.50,.80],[314,.51,.79],[405,.53,.78],[321,.55,.77],[375,.57,.75],[291,.58,.73],[308,.57,.71],[415,.55,.70],[310,.53,.70],[311,.51,.70],[312,.50,.70],[13,.50,.71],[82,.49,.70],[81,.47,.70],[80,.45,.70],[191,.43,.71],[78,.42,.72],[14,.50,.75],[57,.40,.76],[287,.60,.76],
+  [130,.34,.43],[359,.66,.43]].forEach(p=>set(p[0],p[1],p[2]));
+  return pts;
+}
+function useEstimatedAnalysis(message){
+  if(!image)return;
+  landmarks=buildEstimatedFaceLandmarks();
+  buildDraggablePoints();
+  runAllAnalysis(false);
+  landmarkInfo.textContent='자동 랜드마크 인식 실패 · 표준 정면 얼굴 좌표로 임시 분석 중';
+  reanalyzeBtn.disabled=false;
+  saveStateBtn.disabled=false;
+  setStatus('bad',message||'자동 인식이 불안정하여 임시 분석을 표시했습니다.');
+  draw();
+}
+function makeFaceMeshInputCanvas(maxSide=1280){
+  if(!image)throw new Error('분석할 이미지가 없습니다.');
+  const w=image.naturalWidth||image.width;
+  const h=image.naturalHeight||image.height;
+  if(!w||!h)throw new Error('이미지 크기를 읽지 못했습니다.');
+  const ratio=Math.min(1,maxSide/Math.max(w,h));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(w*ratio));
+  c.height=Math.max(1,Math.round(h*ratio));
+  const cx=c.getContext('2d',{willReadFrequently:true});
+  cx.drawImage(image,0,0,c.width,c.height);
+  return c;
+}
+
+function updateLandmarkFromDrag(idx,x,y){if(!landmarks)return;const p=drawPoints[idx];landmarks[p.i].x=x;landmarks[p.i].y=y;p.x=x;p.y=y;runAllAnalysis(false);}
+function resize(){const r=stage.getBoundingClientRect(),dpr=Math.max(1,devicePixelRatio||1);[photo,overlay].forEach(c=>{c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);c.style.width=r.width+'px';c.style.height=r.height+'px';c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);});draw();}window.addEventListener('resize',resize);
+function fitImage(){if(!image)return;const W=photo.clientWidth,H=photo.clientHeight;scale=Math.min(W/image.naturalWidth,H/image.naturalHeight);ox=(W-image.naturalWidth*scale)/2;oy=(H-image.naturalHeight*scale)/2;}function iw(){return image?image.naturalWidth*scale:photo.clientWidth;}function ih(){return image?image.naturalHeight*scale:photo.clientHeight;}function lm(i){return landmarks&&landmarks[i]?landmarks[i]:{x:.5,y:.5,z:0};}function pt(i){const p=lm(i);return[ox+p.x*iw(),oy+p.y*ih()];}function normToCanvas(x,y){return[ox+x*iw(),oy+y*ih()];}function canvasToNorm(x,y){return[(x-ox)/iw(),(y-oy)/ih()];}
+function drawPhoto(){
+  const W=photo.clientWidth,H=photo.clientHeight;
+  pctx.clearRect(0,0,W,H);
+  if(stage)stage.classList.toggle('has-image',!!image);
+  pctx.save();
+  const g=pctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#f5f7f8');g.addColorStop(.55,'#dfe4e6');g.addColorStop(1,'#c6ccd0');
+  pctx.fillStyle=g;pctx.fillRect(0,0,W,H);
+  if(image){
+    pctx.drawImage(image,ox,oy,iw(),ih());
+  }else{
+    pctx.textAlign='center';
+    pctx.fillStyle='rgba(17,25,29,.12)';
+    pctx.beginPath();
+    pctx.ellipse(W/2,H*.42,W*.23,H*.26,0,0,Math.PI*2);pctx.fill();
+    pctx.strokeStyle='rgba(17,25,29,.24)';pctx.lineWidth=2;pctx.setLineDash([8,8]);
+    pctx.beginPath();pctx.ellipse(W/2,H*.42,W*.25,H*.31,0,0,Math.PI*2);pctx.stroke();pctx.setLineDash([]);
+    pctx.fillStyle='#303940';
+    pctx.font='900 24px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    pctx.fillText('얼굴 사진을 업로드하세요',W/2,H*.62);
+    pctx.fillStyle='rgba(48,57,64,.78)';
+    pctx.font='800 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    pctx.fillText('클릭해서 선택하거나 이미지 파일을 이곳에 드롭',W/2,H*.67);
+    pctx.fillText('정면 · 무표정 · 균일 조명 권장',W/2,H*.71);
+  }
+  pctx.restore();
+}
+function drawLine(indices,color='rgba(255,42,42,.95)',width=2,close=false,dash=[]){if(!landmarks)return;octx.save();octx.strokeStyle=color;octx.lineWidth=width;octx.setLineDash(dash);octx.beginPath();indices.forEach((id,k)=>{const p=pt(id);k?octx.lineTo(p[0],p[1]):octx.moveTo(p[0],p[1]);});if(close)octx.closePath();octx.stroke();octx.restore();}
+function drawCurve(a,ctrl,b,color='rgba(255,42,42,.96)',width=3){if(!landmarks)return;const A=pt(a),C=pt(ctrl),B=pt(b);octx.save();octx.strokeStyle=color;octx.lineWidth=width;octx.beginPath();octx.moveTo(A[0],A[1]);octx.quadraticCurveTo(C[0],C[1],B[0],B[1]);octx.stroke();octx.restore();}
+function drawArrow(from,to,color='rgba(63,167,255,.96)'){const A=from,B=to,ang=Math.atan2(B[1]-A[1],B[0]-A[0]);octx.save();octx.strokeStyle=color;octx.fillStyle=color;octx.lineWidth=3;octx.beginPath();octx.moveTo(A[0],A[1]);octx.lineTo(B[0],B[1]);octx.stroke();octx.beginPath();octx.moveTo(B[0],B[1]);octx.lineTo(B[0]-12*Math.cos(ang-.5),B[1]-12*Math.sin(ang-.5));octx.lineTo(B[0]-12*Math.cos(ang+.5),B[1]-12*Math.sin(ang+.5));octx.closePath();octx.fill();octx.restore();}
+function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}function label(txt,x,y){octx.save();octx.font='850 12px system-ui';const w=octx.measureText(txt).width+16;octx.fillStyle='rgba(255,255,255,.88)';octx.strokeStyle='rgba(0,0,0,.10)';octx.lineWidth=1;rounded(octx,x,y,w,25,12);octx.fill();octx.stroke();octx.fillStyle='#111';octx.fillText(txt,x+8,y+17);octx.restore();}
+function ellipseAt(id,rx,ry,color,labelText){const c=pt(id);octx.save();octx.fillStyle=color;octx.beginPath();octx.ellipse(c[0],c[1],rx,ry,0,0,Math.PI*2);octx.fill();octx.restore();if(labelText)label(labelText,c[0]-rx,c[1]-ry-26);}
+function drawDangerZones(){if(!landmarks||!showDanger)return;const danger='rgba(166,140,255,.28)',danger2='rgba(255,59,59,.19)';const small=Math.max(18,iw()*.025),mid=Math.max(28,iw()*.04),large=Math.max(42,iw()*.06);ellipseAt(9,mid,mid*1.15,danger2,'미간 혈관위험');ellipseAt(6,mid*.9,large,danger2,'코/비순 위험');ellipseAt(130,mid,mid*.75,danger,'눈밑/눈가');ellipseAt(359,mid,mid*.75,danger,'눈밑/눈가');ellipseAt(127,mid,mid,danger,'관자');ellipseAt(356,mid,mid,danger,'관자');ellipseAt(98,mid,large,danger,'팔자');ellipseAt(327,mid,large,danger,'팔자');ellipseAt(61,small*1.5,small,danger2,'입술주변');ellipseAt(291,small*1.5,small,danger2,'입술주변');ellipseAt(152,mid,small*1.2,danger,'턱끝');}
+function drawWrinkleStrokes(){if(!landmarks)return;const red='rgba(255,42,42,.95)',blue='rgba(63,167,255,.95)',amber='rgba(255,176,32,.28)';const f1=pt(67),f2=pt(297),browL=pt(70),cheekL=pt(205),cheekR=pt(425);octx.save();octx.globalAlpha=.72;octx.fillStyle=amber;octx.beginPath();octx.ellipse(cheekL[0],cheekL[1],Math.max(35,iw()*.055),Math.max(25,ih()*.045),-.25,0,Math.PI*2);octx.fill();octx.beginPath();octx.ellipse(cheekR[0],cheekR[1],Math.max(35,iw()*.055),Math.max(25,ih()*.045),.25,0,Math.PI*2);octx.fill();octx.restore();drawLine([10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109,10],red,1.8);drawLine([33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246,33],red,1.4);drawLine([263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466,263],red,1.4);drawLine([61,146,91,181,84,17,314,405,321,375,291,308,415,310,311,312,13,82,81,80,191,78,61],red,1.6);drawLine([168,6,197,195,5,4,1,19,94,2],red,1.5);octx.save();octx.strokeStyle=red;octx.lineWidth=2.4;octx.lineCap='round';const foreheadLines=Math.round(scores.forehead/18);for(let i=0;i<foreheadLines;i++){const y=f1[1]+(i+1)*(browL[1]-f1[1])/(foreheadLines+2);const x1=f1[0]+10+i*3,x2=f2[0]-10-i*3;octx.beginPath();octx.moveTo(x1,y);octx.bezierCurveTo((x1+x2)/2-40,y-8,(x1+x2)/2+40,y+8,x2,y);octx.stroke();}const glLines=Math.round(scores.glabella/24),g=pt(9);for(let i=0;i<glLines;i++){const x=g[0]+(i-(glLines-1)/2)*8;octx.beginPath();octx.moveTo(x,g[1]+5);octx.quadraticCurveTo(x-4,g[1]+28,x+1,g[1]+52);octx.stroke();}if(scores.crow>28){const l=pt(130),r=pt(359);for(const c of [l,r]){const dir=c===l?-1:1;for(let i=0;i<Math.round(scores.crow/22);i++){octx.beginPath();octx.moveTo(c[0],c[1]+i*4);octx.lineTo(c[0]+dir*(28+i*6),c[1]-16+i*15);octx.stroke();}}}if(scores.naso>25){drawCurve(98,205,61,red,3);drawCurve(327,425,291,red,3);}if(scores.mouth>28){drawCurve(61,57,172,red,2.4);drawCurve(291,287,397,red,2.4);}drawLine([172,136,150,149,176,148,152,377,400,378,379,365,397],red,2.7);octx.restore();if(scores.jaw>25||scores.naso>30){drawArrow(pt(205),normToCanvas(Math.max(.03,lm(234).x-.14),Math.max(.03,lm(234).y-.11)),blue);drawArrow(pt(425),normToCanvas(Math.min(.97,lm(454).x+.14),Math.max(.03,lm(454).y-.11)),blue);}label('이마 주름',pt(67)[0]-20,pt(67)[1]-34);label('미간',pt(9)[0]+10,pt(9)[1]-20);label('눈가',pt(130)[0]-55,pt(130)[1]-20);label('팔자',pt(98)[0]-48,pt(98)[1]+18);label('피부결/볼륨',pt(425)[0]+10,pt(425)[1]-12);label('턱선',pt(152)[0]+12,pt(152)[1]-4);octx.save();octx.fillStyle=red;octx.strokeStyle='white';octx.lineWidth=1;drawPoints.forEach(p=>{const c=normToCanvas(p.x,p.y);octx.beginPath();octx.arc(c[0],c[1],4.2,0,Math.PI*2);octx.fill();octx.stroke();});octx.restore();}
+function drawOverlay(){const W=overlay.clientWidth,H=overlay.clientHeight;octx.clearRect(0,0,W,H);if(!landmarks)return;octx.save();octx.globalAlpha=+document.getElementById('alpha').value/100;if(showDanger)drawDangerZones();if(showOverlay)drawWrinkleStrokes();octx.restore();}function draw(){drawPhoto();drawOverlay();updateReport();updateSafetyReport();}
+function rectFrom(ids,padX=.02,padY=.02){const xs=ids.map(i=>lm(i).x),ys=ids.map(i=>lm(i).y);return{x1:clamp(Math.min(...xs)-padX),y1:clamp(Math.min(...ys)-padY),x2:clamp(Math.max(...xs)+padX),y2:clamp(Math.max(...ys)+padY)};}function getSourceCanvas(){const c=document.createElement('canvas');c.width=image.naturalWidth;c.height=image.naturalHeight;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0,c.width,c.height);return ctx;}
+function regionStats(ctx,r){
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  let x=Math.floor(clamp(r.x1)*W),y=Math.floor(clamp(r.y1)*H),x2=Math.ceil(clamp(r.x2)*W),y2=Math.ceil(clamp(r.y2)*H);
+  x=clamp(x,0,Math.max(0,W-1));y=clamp(y,0,Math.max(0,H-1));x2=clamp(x2,x+1,W);y2=clamp(y2,y+1,H);
+  const w=Math.max(1,x2-x),h=Math.max(1,y2-y);
+  let data;
+  try{data=ctx.getImageData(x,y,w,h).data;}catch(e){return{mean:128,sd:0,under:0,over:0,w,h};}
+  let sum=0,sum2=0,under=0,over=0;
+  for(let i=0;i<data.length;i+=4){const g=.299*data[i]+.587*data[i+1]+.114*data[i+2];sum+=g;sum2+=g*g;if(g<35)under++;if(g>235)over++;}
+  const n=Math.max(1,data.length/4),mean=sum/n,sd=Math.sqrt(Math.max(0,sum2/n-mean*mean));
+  return{mean,sd,under:under/n,over:over/n,w,h};
+}
+function analyzeRegion(ctx,r,orientation='mixed'){
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  let x=Math.floor(clamp(r.x1)*W),y=Math.floor(clamp(r.y1)*H),x2=Math.ceil(clamp(r.x2)*W),y2=Math.ceil(clamp(r.y2)*H);
+  x=clamp(x,0,Math.max(0,W-1));y=clamp(y,0,Math.max(0,H-1));x2=clamp(x2,x+8,W);y2=clamp(y2,y+8,H);
+  const w=Math.max(8,x2-x),h=Math.max(8,y2-y);
+  let data;
+  try{data=ctx.getImageData(x,y,Math.min(w,W-x),Math.min(h,H-y)).data;}catch(e){return 0;}
+  const realW=Math.min(w,W-x),realH=Math.min(h,H-y);
+  const gray=new Float32Array(realW*realH);let sum=0,sum2=0;
+  for(let j=0;j<realH;j++)for(let i=0;i<realW;i++){const p=(j*realW+i)*4,g=.299*data[p]+.587*data[p+1]+.114*data[p+2];gray[j*realW+i]=g;sum+=g;sum2+=g*g;}
+  const n=Math.max(1,realW*realH),contrast=Math.sqrt(Math.max(0,sum2/n-(sum/n)*(sum/n)));let edge=0,orient=0,count=0,dirBalance=0,step=Math.max(1,Math.floor(Math.min(realW,realH)/150));
+  for(let j=1;j<realH-1;j+=step){for(let i=1;i<realW-1;i+=step){const a=(j-1)*realW+i-1,b=(j-1)*realW+i,c=(j-1)*realW+i+1,d=j*realW+i-1,f=j*realW+i+1,g=(j+1)*realW+i-1,hh=(j+1)*realW+i,ii=(j+1)*realW+i+1;const gx=-gray[a]-2*gray[d]-gray[g]+gray[c]+2*gray[f]+gray[ii],gy=-gray[a]-2*gray[b]-gray[c]+gray[g]+2*gray[hh]+gray[ii];let v=Math.sqrt(gx*gx+gy*gy)/4;if(orientation==='horizontal')v=Math.abs(gy)/4;if(orientation==='vertical')v=Math.abs(gx)/4;if(orientation==='diagonal')v=(Math.abs(gx)+Math.abs(gy))/5;orient+=v;if(v>22)edge++;dirBalance+=Math.abs(Math.abs(gx)-Math.abs(gy))/4;count++;}}
+  let raw=(edge/Math.max(1,count))*145+(orient/Math.max(1,count))*1.25+contrast*.38+(dirBalance/Math.max(1,count))*.55;raw*=+document.getElementById('sensitivity').value/100;return Math.round(clamp(raw,0,100));
+}
+function mergeScore(a,b){return Math.round((a+b)/2);}function normalizeCrowScore(raw){const noiseFloor=22,dampening=.68;return Math.round(clamp((raw-noiseFloor)*dampening,0,100));}function crowROI(side){const faceW=Math.max(.20,Math.abs(lm(454).x-lm(234).x)),faceH=Math.max(.30,Math.abs(lm(152).y-lm(10).y));if(side==='left'){const outerX=Math.min(lm(33).x,lm(130).x),cy=(lm(33).y+lm(130).y+lm(159).y+lm(145).y)/4;return{x1:clamp(outerX-faceW*.105),y1:clamp(cy-faceH*.055),x2:clamp(outerX+faceW*.025),y2:clamp(cy+faceH*.070)};}const outerX=Math.max(lm(263).x,lm(359).x),cy=(lm(263).y+lm(359).y+lm(386).y+lm(374).y)/4;return{x1:clamp(outerX-faceW*.025),y1:clamp(cy-faceH*.055),x2:clamp(outerX+faceW*.105),y2:clamp(cy+faceH*.070)};}
+function runAllAnalysis(keepManual=true){autoAnalyzeWrinkles(keepManual);evaluateSafety();}
+function autoAnalyzeWrinkles(keepManual=true){if(!image||!landmarks)return;const ctx=getSourceCanvas();const foreheadR=rectFrom([10,67,109,338,297,9],.035,.018);foreheadR.y2=Math.min(foreheadR.y2,lm(9).y+.045);const glabellaR=rectFrom([9,107,336,55,285],.018,.025),crowLR=crowROI('left'),crowRR=crowROI('right'),nasoLR=rectFrom([98,205,187,61,39],.018,.025),nasoRR=rectFrom([327,425,411,291,269],.018,.025),mouthR=rectFrom([61,291,13,14,17,57,287],.035,.030),jawR=rectFrom([172,136,150,176,148,152,377,400,378,365,397],.035,.020),textureR=rectFrom([234,454,10,152,205,425],.010,.010);const auto={forehead:analyzeRegion(ctx,foreheadR,'horizontal'),glabella:analyzeRegion(ctx,glabellaR,'vertical'),crow:normalizeCrowScore(mergeScore(analyzeRegion(ctx,crowLR,'diagonal'),analyzeRegion(ctx,crowRR,'diagonal'))),naso:mergeScore(analyzeRegion(ctx,nasoLR,'diagonal'),analyzeRegion(ctx,nasoRR,'diagonal')),mouth:analyzeRegion(ctx,mouthR,'mixed'),jaw:analyzeRegion(ctx,jawR,'horizontal'),texture:analyzeRegion(ctx,textureR,'mixed')};Object.keys(scores).forEach(k=>{if(keepManual&&manualTouched[k])return;scores[k]=auto[k];const input=document.querySelector(`.manual[data-k="${k}"]`);if(input){input.value=scores[k];document.getElementById('v'+cap(k)).textContent=scores[k];}});landmarkInfo.textContent=`눈·코·입·턱 자동 좌표 인식 완료. 얼굴 폭 ${(Math.abs(lm(454).x-lm(234).x)*100).toFixed(1)}%, 턱 위치 ${lm(152).y.toFixed(2)}`;}
+function evaluateSafety(){if(!image||!landmarks)return;const ctx=getSourceCanvas(),faceR=rectFrom([10,152,234,454,127,356],.02,.02),leftR={x1:faceR.x1,y1:faceR.y1,x2:(faceR.x1+faceR.x2)/2,y2:faceR.y2},rightR={x1:(faceR.x1+faceR.x2)/2,y1:faceR.y1,x2:faceR.x2,y2:faceR.y2};const all=regionStats(ctx,faceR),left=regionStats(ctx,leftR),right=regionStats(ctx,rightR),sideDiff=Math.abs(left.mean-right.mean),exposureBad=all.mean<75||all.mean>190||all.under>.08||all.over>.08;safety.lighting={mean:Math.round(all.mean),contrast:Math.round(all.sd),sideDiff:Math.round(sideDiff),under:Math.round(all.under*100),over:Math.round(all.over*100),ok:!exposureBad&&sideDiff<28};const faceW=Math.abs(lm(454).x-lm(234).x),faceH=Math.abs(lm(152).y-lm(10).y),centerX=(lm(454).x+lm(234).x)/2,centerY=(lm(10).y+lm(152).y)/2,eyeWLeft=Math.abs(lm(133).x-lm(33).x),eyeWRight=Math.abs(lm(263).x-lm(362).x),eyeRatio=Math.abs(eyeWLeft-eyeWRight)/Math.max(.001,(eyeWLeft+eyeWRight)/2),tilt=Math.abs(lm(33).y-lm(263).y);safety.distortion={faceW:Math.round(faceW*100),faceH:Math.round(faceH*100),centerX:+centerX.toFixed(2),eyeRatio:Math.round(eyeRatio*100),tilt:Math.round(tilt*100),ok:!(faceW<.33||faceW>.82||faceH<.42)&&!(Math.abs(centerX-.5)>.13||Math.abs(centerY-.52)>.16)&&!(eyeRatio>.23||tilt>.045)};const mouthOpen=Math.abs(lm(14).y-lm(13).y)/Math.max(.001,faceH),smile=(lm(61).y+lm(291).y)/2-lm(13).y,browDiff=Math.abs(lm(70).y-lm(300).y),eyeOpenL=Math.abs(lm(159).y-lm(145).y),eyeOpenR=Math.abs(lm(386).y-lm(374).y);safety.expression={mouthOpen:Math.round(mouthOpen*1000)/10,smile:Math.round(smile*1000)/10,browDiff:Math.round(browDiff*1000)/10,eyeAsym:Math.round(Math.abs(eyeOpenL-eyeOpenR)*1000)/10,ok:!(mouthOpen>.035||Math.abs(smile)>.025||browDiff>.035||Math.abs(eyeOpenL-eyeOpenR)>.018)};const skinVal=document.getElementById('skinThickness').value;safety.skin={value:skinVal,ok:skinVal!=='unknown',note:skinVal==='thin'?'얇음: 멍·비침·과교정 위험을 낮추기 위해 보수적 용량 권장':skinVal==='thick'?'두꺼움: 반응이 약할 수 있어 단계적 증량/에너지 조절 필요':skinVal==='unknown'?'사진만으로 판단 불가: 촉진·피부 두께·탄력 평가 필요':'보통: 표준 범위에서 단계적 접근'};evaluateContraindications();}
+function evaluateContraindications(){const checks=[...document.querySelectorAll('#contraList input:checked')],high=checks.filter(c=>c.dataset.risk==='high').map(c=>c.dataset.name),medium=checks.filter(c=>c.dataset.risk==='medium').map(c=>c.dataset.name);safety.contraindications={high,medium,ok:high.length===0&&medium.length===0};let risk=0;if(safety.lighting&&!safety.lighting.ok)risk++;if(safety.distortion&&!safety.distortion.ok)risk++;if(safety.expression&&!safety.expression.ok)risk++;if(safety.skin&&safety.skin.value==='unknown')risk++;if(safety.skin&&safety.skin.value==='thin')risk++;risk+=medium.length+high.length*3;safety.overall=high.length?{level:'high',text:'시술 보류/의사 직접평가 필요'}:risk>=3?{level:'medium',text:'주의 · 보정/문진 후 계획'}:{level:'low',text:'기본 조건 양호'};}
+function grade(avg){if(avg<28)return['예방/유지관리','낮음'];if(avg<48)return['초기 개선','보통'];if(avg<68)return['복합 개선 권장','중등도'];return['집중 치료 상담','높음'];}
+function updateReport(){const keys=[['forehead','이마 주름'],['glabella','미간 주름'],['crow','눈가 잔주름'],['naso','팔자/중안면'],['mouth','입가/마리오넷'],['jaw','턱선/처짐'],['texture','피부결/모공']];const avg=Math.round(Object.values(scores).reduce((a,b)=>a+b,0)/keys.length);document.getElementById('totalScore').textContent=image?avg+'/100':'-';document.getElementById('scoreBar').style.width=image?avg+'%':'0%';const g=grade(avg);document.getElementById('grade').textContent=image?g[0]+' · '+g[1]:'분석 대기';metricsEl.innerHTML=keys.map(([k,n])=>`<div class="metric"><div class="name">${n}</div><div class="miniBar"><span style="width:${scores[k]}%"></span></div><div class="num">${image?scores[k]:'-'}</div></div>`).join('');updateRecommendations(avg);}
+function pill(level,text){return `<span class="riskPill ${level==='high'?'red':level==='medium'?'amber':'green'}">${text}</span>`;}function safetyCard(title,body,ok){return `<div class="rec ${ok?'ok':'warn'}"><strong>${title} ${ok?pill('low','양호'):pill('medium','확인 필요')}</strong><span>${body}</span></div>`;}
+function updateSafetyReport(){if(!image||!safety.lighting){safetySummary.innerHTML='<div class="rec"><strong>사진 업로드 필요</strong><span>사진을 업로드하면 조명, 렌즈 왜곡/촬영각, 표정, 피부 두께, 금기사항 평가가 표시됩니다.</span></div>';return;}const L=safety.lighting,D=safety.distortion,E=safety.expression,S=safety.skin,C=safety.contraindications,O=safety.overall;let html=`<div class="rec ${O.level==='high'?'danger':O.level==='medium'?'warn':'ok'}"><strong>종합 안전판정 ${pill(O.level,O.text)}</strong><span>이 판정은 상담 보조용입니다. 고위험 체크가 있으면 시술 전 의학적 문진과 필요 시 주치의 확인이 우선입니다.</span></div>`;html+=safetyCard('조명 평가',`평균 밝기 ${L.mean}, 대비 ${L.contrast}, 좌우 조명 차이 ${L.sideDiff}, 저노출 ${L.under}%, 과노출 ${L.over}%. ${L.ok?'주름/피부결 분석에 비교적 적합합니다.':'균일한 정면 조명에서 다시 촬영하는 것이 좋습니다.'}`,L.ok);html+=safetyCard('렌즈 왜곡/촬영각 평가',`얼굴 폭 ${D.faceW}%, 얼굴 높이 ${D.faceH}%, 중심 X ${D.centerX}, 눈 크기 좌우차 ${D.eyeRatio}%, 수평 기울기 ${D.tilt}%. ${D.ok?'정면성·거리 조건이 비교적 양호합니다.':'가까운 셀카, 광각 렌즈, 고개 회전 가능성이 있습니다.'}`,D.ok);html+=safetyCard('표정 평가',`입 벌림 ${E.mouthOpen}, 미소 지표 ${E.smile}, 눈썹 높이 차이 ${E.browDiff}, 눈 개폐 좌우차 ${E.eyeAsym}. ${E.ok?'무표정에 가깝습니다.':'미소·찡그림·눈가 긴장 가능성이 있어 재촬영이 좋습니다.'}`,E.ok);html+=safetyCard('피부 두께 평가',S.note,S.ok);const cText=C.high.length||C.medium.length?`고위험: ${C.high.join(', ')||'없음'} / 주의: ${C.medium.join(', ')||'없음'}`:'체크된 금기/주의 항목이 없습니다.';html+=`<div class="rec ${C.high.length?'danger':C.medium.length?'warn':'ok'}"><strong>시술 금기/주의 ${C.high.length?pill('high','보류'):C.medium.length?pill('medium','주의'):pill('low','양호')}</strong><span>${cText}</span></div>`;html+=`<div class="rec warn"><strong>혈관 위험 부위</strong><span>미간, 코, 눈밑, 관자, 팔자, 입술 주변, 턱끝은 혈관폐색·멍·부종 등 위험 평가가 필요한 부위입니다. 오버레이의 보라/붉은 영역은 상담용 위험 알림입니다.</span></div>`;safetySummary.innerHTML=html;}
+function addRec(title,body,color='var(--blue)',cls=''){return `<div class="rec ${cls}" style="border-left-color:${color}"><strong>${title}</strong><span>${body}</span></div>`;}function updateRecommendations(avg){if(!image){recsEl.innerHTML='<div class="rec"><strong>사진 업로드 필요</strong><span>얼굴 사진을 업로드하면 자동 분석 후 시술 제안이 생성됩니다.</span></div>';return;}let html='';if(safety.overall&&safety.overall.level==='high')html+=addRec('우선 조치: 시술 보류','체크된 고위험 금기사항이 있습니다. 의학적 문진과 필요 시 주치의 확인이 먼저입니다.','var(--red)','danger');if(safety.lighting&&!safety.lighting.ok)html+=addRec('재촬영 권장: 조명 조건 보정','조명 편차나 노출 문제가 있어 주름/피부결 점수가 과대 또는 과소평가될 수 있습니다.','var(--amber)','warn');if(safety.distortion&&!safety.distortion.ok)html+=addRec('재촬영 권장: 렌즈 왜곡/촬영각 보정','광각 셀카나 고개 회전은 팔자, 턱선, 비대칭 평가를 왜곡합니다.','var(--amber)','warn');if(safety.expression&&!safety.expression.ok)html+=addRec('재촬영 권장: 표정 보정','미소, 찡그림, 입 벌림, 눈가 긴장은 동적 주름을 과장합니다.','var(--amber)','warn');if(avg<28)html+=addRec('예방 유지관리 플랜','강한 시술보다 자외선 차단, 보습, 항산화 관리, 가벼운 스킨부스터, 표정근 예방 톡신을 중심으로 자연스러운 유지 전략이 적합합니다.','var(--green)');if(scores.forehead>=32||scores.glabella>=32)html+=addRec('상안면: 보툴리눔 톡신 우선 평가','이마·미간 주름은 표정근 작용이 큰 부위입니다. 눈썹 처짐 위험, 안검하수 병력, 미간 혈관 위험 부위를 확인한 뒤 낮은 용량부터 시작합니다.','var(--red)');if(scores.crow>=35)html+=addRec('눈가: 잔주름 + 얇은 피부 재생','눈가 주름은 피부 얇음, 건조, 탄력 저하를 함께 봐야 합니다. PN/HA 스킨부스터 또는 저자극 레이저를 보수적으로 고려합니다.','var(--amber)');if(scores.naso>=38)html+=addRec('팔자/중안면: 앞광대 지지와 볼륨 재배치','팔자선만 직접 채우기보다 중안면 지지 부족, 앞광대 꺼짐, 볼 처짐, 비순부 혈관 위험을 함께 평가합니다.','var(--blue)');if(scores.mouth>=35)html+=addRec('입가/마리오넷: 입꼬리 균형 개선','입가 그림자와 마리오넷 라인은 DAO 근육 긴장, 턱끝 지지, 입술 주변 볼륨 부족을 함께 봅니다.','var(--green)');if(scores.jaw>=38)html+=addRec('턱선/처짐: 리프팅 벡터 중심 설계','RF/HIFU, 실리프팅, 턱끝·전방 지지 필러를 얼굴형과 위험 부위에 맞춰 검토합니다.','var(--purple)');if(scores.texture>=38)html+=addRec('피부결/모공: 레이저 스킨부스터 플랜','CO₂ 프락셔널, RF 니들, LADD 방식의 엑소좀·PN·HA 스킨부스터를 고려할 수 있습니다.','var(--amber)');recsEl.innerHTML=html;const safeText=safety.overall?safety.overall.text:'안전평가 대기';document.getElementById('scriptText').textContent=`자동 이미지 분석상 전체 노화/주름 지수는 ${avg}/100, ${grade(avg)[0]} 단계입니다. 현재 안전판정은 “${safeText}”입니다. 한 번에 강하게 바꾸기보다 근육성 주름은 톡신으로 부드럽게 조절하고, 꺼짐과 지지 부족은 필요한 만큼만 보강하며, 피부결과 잔주름은 레이저·스킨부스터로 회복시키는 단계적 비수술 플랜이 자연스럽습니다.`;}
+
+function resetAnalysisState(){
+  landmarks=null;
+  scores={forehead:0,glabella:0,crow:0,naso:0,mouth:0,jaw:0,texture:0};
+  manualTouched={forehead:false,glabella:false,crow:false,naso:false,mouth:false,jaw:false};
+  safety={lighting:null,distortion:null,expression:null,skin:null,contraindications:null,overall:null};
+  reanalyzeBtn.disabled=true;
+  saveStateBtn.disabled=true;
+  landmarkInfo.textContent='랜드마크 대기 중';
+  document.querySelectorAll('.manual').forEach(inp=>{
+    inp.value=0;
+    document.getElementById('v'+cap(inp.dataset.k)).textContent='-';
+  });
+  updateReport();
+  updateSafetyReport();
+}
+function fullResetApp(){
+  closeCamera();
+  image=null;
+  currentImageDataUrl=null;
+  currentImageName='';
+  capturedCameraDataUrl=null;
+  scale=1;ox=0;oy=0;
+  showOverlay=true;
+  showDanger=true;
+  document.getElementById('sensitivity').value=100;
+  document.getElementById('vSensitivity').textContent='100%';
+  document.getElementById('alpha').value=92;
+  document.getElementById('vAlpha').textContent='92%';
+  document.getElementById('skinThickness').value='normal';
+  document.getElementById('vSkinThickness').textContent='보통';
+  document.getElementById('goal').value='natural';
+  document.getElementById('vGoal').textContent='자연스럽게';
+  document.querySelectorAll('#contraList input').forEach(ch=>{ch.checked=false;});
+  if(fileInput)fileInput.value='';
+  if(stateInput)stateInput.value='';
+  if(cameraFileInput)cameraFileInput.value='';
+  updateToggleButtonState();
+  resetAnalysisState();
+  applyActiveTab('summary');
+  draw();
+  setStatus('ok','초기화 완료. 새 얼굴사진을 업로드하거나 웹캠으로 촬영하세요.');
+}
+function applyScoreInputs(){
+  document.querySelectorAll('.manual').forEach(inp=>{
+    const k=inp.dataset.k;
+    inp.value=Number(scores[k]||0);
+    document.getElementById('v'+cap(k)).textContent=image?Number(scores[k]||0):'-';
+  });
+}
+function applyActiveTab(tabName='summary'){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabName));
+  document.getElementById('summaryTab').classList.toggle('hidden',tabName!=='summary');
+  document.getElementById('safetyTab').classList.toggle('hidden',tabName!=='safety');
+  document.getElementById('planTab').classList.toggle('hidden',tabName!=='plan');
+  document.getElementById('techTab').classList.toggle('hidden',tabName!=='tech');
+}
+function applySavedStateAfterImageLoad(state){
+  const controls=state.controls||{};
+  if(controls.sensitivity!=null){document.getElementById('sensitivity').value=controls.sensitivity;document.getElementById('vSensitivity').textContent=controls.sensitivity+'%';}
+  if(controls.alpha!=null){document.getElementById('alpha').value=controls.alpha;document.getElementById('vAlpha').textContent=controls.alpha+'%';}
+  if(controls.skinThickness!=null){
+    const el=document.getElementById('skinThickness');
+    el.value=controls.skinThickness;
+    document.getElementById('vSkinThickness').textContent=el.options[el.selectedIndex]?.text.split('·')[0].trim()||'보통';
+  }
+  if(controls.goal!=null){
+    const el=document.getElementById('goal');
+    el.value=controls.goal;
+    document.getElementById('vGoal').textContent=el.options[el.selectedIndex]?.text||'자연스럽게';
+  }
+  showOverlay=controls.showOverlay!==undefined?!!controls.showOverlay:true;
+  showDanger=controls.showDanger!==undefined?!!controls.showDanger:true;
+  updateToggleButtonState();
+
+  scores=Object.assign({forehead:0,glabella:0,crow:0,naso:0,mouth:0,jaw:0,texture:0},state.scores||{});
+  manualTouched=Object.assign({forehead:false,glabella:false,crow:false,naso:false,mouth:false,jaw:false},state.manualTouched||{});
+  safety=Object.assign({lighting:null,distortion:null,expression:null,skin:null,contraindications:null,overall:null},state.safety||{});
+  applyScoreInputs();
+
+  document.querySelectorAll('#contraList input').forEach(ch=>{ch.checked=false;});
+  (state.contraChecked||[]).forEach(name=>{
+    const found=[...document.querySelectorAll('#contraList input')].find(ch=>ch.dataset.name===name);
+    if(found)found.checked=true;
+  });
+
+  if(Array.isArray(state.landmarks)&&state.landmarks.length){
+    landmarks=state.landmarks.map(p=>({x:Number(p.x)||0,y:Number(p.y)||0,z:Number(p.z)||0}));
+    buildDraggablePoints();
+    landmarkInfo.textContent=state.landmarkInfo||`저장된 랜드마크 ${landmarks.length}개 복원 완료`;
+  }else{
+    landmarks=null;
+    buildFallbackPoints();
+    landmarkInfo.textContent='저장 파일에 랜드마크가 없어 재분석이 필요합니다.';
+  }
+
+  if(state.view&&Number.isFinite(state.view.scale)&&Number.isFinite(state.view.ox)&&Number.isFinite(state.view.oy)){
+    scale=state.view.scale;ox=state.view.ox;oy=state.view.oy;
+  }
+  applyActiveTab(state.activeTab||'summary');
+  reanalyzeBtn.disabled=false;
+  saveStateBtn.disabled=false;
+}
+function loadImageForAnalysis(src,options={}){
+  const opts=Object.assign({analyze:true,savedState:null,sourceName:''},options);
+  currentImageDataUrl=src;
+  currentImageName=opts.sourceName||'face-photo.jpg';
+  const nextImage=new Image();
+  nextImage.decoding='async';
+  nextImage.onload=async()=>{
+    image=nextImage;
+    fitImage();
+    if(opts.savedState){
+      applySavedStateAfterImageLoad(opts.savedState);
+      draw();
+      setStatus('ok','저장된 사진과 분석 내용을 불러왔습니다. 필요하면 AI 재분석을 누르세요.');
+      return;
+    }
+    resetAnalysisState();
+    saveStateBtn.disabled=true;
+    reanalyzeBtn.disabled=true;
+    draw();
+    await new Promise(requestAnimationFrame);
+    if(opts.analyze)await analyzeUploadedImage();
+  };
+  nextImage.onerror=()=>setStatus('bad','이미지를 불러오지 못했습니다. 다른 사진으로 다시 시도하세요.');
+  nextImage.src=src;
+}
+function readFileAsDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error||new Error('파일을 읽지 못했습니다.'));
+    reader.readAsDataURL(file);
+  });
+}
+function buildSessionState(){
+  if(!image||!currentImageDataUrl)throw new Error('저장할 얼굴 사진이 없습니다.');
+  const activeTab=document.querySelector('.tab.active')?.dataset.tab||'summary';
+  return {
+    app:'Dr. YOUNG Clinical Vision',
+    version:'webcam-save-load-reset-fixed-20260502',
+    savedAt:new Date().toISOString(),
+    imageName:currentImageName,
+    imageDataUrl:currentImageDataUrl,
+    imageSize:{width:image.naturalWidth,height:image.naturalHeight},
+    landmarks:landmarks?landmarks.map(p=>({x:p.x,y:p.y,z:p.z||0})):null,
+    landmarkInfo:landmarkInfo.textContent,
+    scores:Object.assign({},scores),
+    manualTouched:Object.assign({},manualTouched),
+    safety:JSON.parse(JSON.stringify(safety||{})),
+    contraChecked:[...document.querySelectorAll('#contraList input:checked')].map(ch=>ch.dataset.name),
+    controls:{
+      sensitivity:document.getElementById('sensitivity').value,
+      alpha:document.getElementById('alpha').value,
+      skinThickness:document.getElementById('skinThickness').value,
+      goal:document.getElementById('goal').value,
+      showOverlay,showDanger
+    },
+    view:{scale,ox,oy},
+    activeTab
+  };
+}
+function saveCurrentSession(){
+  try{
+    const state=buildSessionState();
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    a.href=url;
+    a.download=`dr-young-clinical-vision-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    setStatus('ok','현재 사진과 분석 내용을 JSON 파일로 저장했습니다.');
+  }catch(err){
+    console.error(err);
+    setStatus('bad',err.message||'분석 내용을 저장하지 못했습니다.');
+    alert(err.message||'분석 내용을 저장하지 못했습니다.');
+  }
+}
+async function loadSavedSession(file){
+  try{
+    const txt=await file.text();
+    const state=JSON.parse(txt);
+    if(!state||!state.imageDataUrl)throw new Error('Dr. YOUNG 저장 파일 형식이 아닙니다.');
+    loadImageForAnalysis(state.imageDataUrl,{analyze:false,savedState:state,sourceName:state.imageName||file.name});
+  }catch(err){
+    console.error(err);
+    setStatus('bad',err.message||'저장 파일을 불러오지 못했습니다.');
+    alert(err.message||'저장 파일을 불러오지 못했습니다.');
+  }
+}
+function isLocalhost(){
+  return ['localhost','127.0.0.1','::1'].includes(location.hostname);
+}
+function cameraBlockedMessage(err){
+  const name=err&&err.name?err.name:'CameraError';
+  if(!window.isSecureContext&&!isLocalhost()){
+    return '브라우저 보안상 현재 주소에서는 카메라를 열 수 없습니다. HTTPS 주소에서 접속하거나 localhost에서 테스트해야 합니다.';
+  }
+  if(name==='NotAllowedError'||name==='SecurityError'){
+    return '카메라 권한이 거부되었거나 iframe 권한이 차단되었습니다. 주소창 왼쪽 자물쇠/카메라 아이콘에서 허용으로 바꾸고, iframe에는 allow="camera *; fullscreen"을 넣어주세요.';
+  }
+  if(name==='NotFoundError'||name==='DevicesNotFoundError'){
+    return '사용 가능한 웹캠을 찾지 못했습니다. 카메라 연결 상태와 다른 앱의 카메라 사용 여부를 확인하세요.';
+  }
+  if(name==='NotReadableError'||name==='TrackStartError'){
+    return '다른 프로그램이 카메라를 사용 중이거나 운영체제 권한이 막혀 있습니다. 화상회의 앱을 끄고 브라우저/OS 카메라 권한을 확인하세요.';
+  }
+  return '웹캠을 열 수 없습니다. HTTPS 연결, 브라우저 카메라 권한, iframe allow 속성을 확인하세요.';
+}
+function openCameraFileFallback(){
+  if(cameraFileInput){
+    cameraFileInput.value='';
+    cameraFileInput.click();
+  }
+}
+async function openCamera(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    const msg='이 브라우저에서는 실시간 웹캠 촬영 기능을 사용할 수 없습니다. 대신 카메라/사진 파일 선택창을 엽니다.';
+    setStatus('bad',msg);
+    alert(msg);
+    openCameraFileFallback();
+    return;
+  }
+  if(!window.isSecureContext&&!isLocalhost()){
+    const msg='브라우저 보안상 HTML 코드에서 이 제한을 해제할 수 없습니다. HTTPS 주소에서 접속해야 웹캠이 열립니다. 대신 카메라/사진 파일 선택창을 엽니다.';
+    setStatus('bad',msg);
+    alert(msg);
+    openCameraFileFallback();
+    return;
+  }
+  capturedCameraDataUrl=null;
+  cameraCanvas.classList.add('hidden');
+  cameraVideo.classList.remove('hidden');
+  const cameraPreviewEl=document.querySelector('.cameraPreview');
+  if(cameraPreviewEl)cameraPreviewEl.classList.remove('is-captured');
+  cameraUseBtn.classList.add('hidden');
+  cameraRetakeBtn.classList.add('hidden');
+  cameraUseBtn.disabled=true;
+  cameraRetakeBtn.disabled=true;
+  cameraSnapBtn.disabled=false;
+  cameraModal.classList.remove('hidden');
+  if(cameraPreviewEl)cameraPreviewEl.classList.remove('is-captured');
+  cameraModal.setAttribute('aria-hidden','false');
+  setStatus('','웹캠 권한을 요청하는 중…');
+  try{
+    stopCamera(false);
+    try{
+      cameraStream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},
+        audio:false
+      });
+    }catch(primaryErr){
+      console.warn('고해상도 카메라 요청 실패, 기본 카메라로 재시도',primaryErr);
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    }
+    cameraVideo.srcObject=cameraStream;
+    await cameraVideo.play();
+    setStatus('ok','웹캠 준비 완료. 정면·무표정으로 맞춘 뒤 “촬영 후 분석”을 누르세요.');
+  }catch(err){
+    console.error(err);
+    const msg=cameraBlockedMessage(err);
+    setStatus('bad',msg);
+    alert(msg+'\n\n대체 방법으로 카메라/사진 파일 선택창을 엽니다.');
+    closeCamera();
+    openCameraFileFallback();
+  }
+}
+function stopCamera(updateStatus=true){
+  if(cameraStream){
+    cameraStream.getTracks().forEach(track=>track.stop());
+    cameraStream=null;
+  }
+  if(cameraVideo)cameraVideo.srcObject=null;
+  if(updateStatus&&image)setStatus('ok','사진이 준비되었습니다. 필요하면 AI 재분석을 누르세요.');
+}
+function closeCamera(){
+  stopCamera(false);
+  cameraModal.classList.add('hidden');
+  cameraModal.setAttribute('aria-hidden','true');
+}
+function captureCameraFrame(){
+  if(!cameraVideo.videoWidth||!cameraVideo.videoHeight){
+    setStatus('bad','웹캠 영상이 아직 준비되지 않았습니다. 잠시 후 다시 촬영하세요.');
+    return;
+  }
+  cameraCanvas.width=cameraVideo.videoWidth;
+  cameraCanvas.height=cameraVideo.videoHeight;
+  const cctx=cameraCanvas.getContext('2d');
+  cctx.drawImage(cameraVideo,0,0,cameraCanvas.width,cameraCanvas.height);
+  capturedCameraDataUrl=cameraCanvas.toDataURL('image/jpeg',0.92);
+  cameraVideo.classList.add('hidden');
+  cameraCanvas.classList.remove('hidden');
+  const cameraPreviewEl=document.querySelector('.cameraPreview');
+  if(cameraPreviewEl)cameraPreviewEl.classList.add('is-captured');
+  cameraSnapBtn.disabled=true;
+  cameraUseBtn.disabled=true;
+  cameraRetakeBtn.disabled=false;
+  cameraUseBtn.classList.add('hidden');
+  cameraRetakeBtn.classList.remove('hidden');
+  setStatus('','웹캠 사진을 화면에 불러오고 자동 분석을 시작합니다…');
+  const dataUrl=capturedCameraDataUrl;
+  closeCamera();
+  loadImageForAnalysis(dataUrl,{sourceName:'webcam-capture.jpg'});
+}
+function retakeCameraFrame(){
+  capturedCameraDataUrl=null;
+  cameraCanvas.classList.add('hidden');
+  cameraVideo.classList.remove('hidden');
+  const cameraPreviewEl=document.querySelector('.cameraPreview');
+  if(cameraPreviewEl)cameraPreviewEl.classList.remove('is-captured');
+  cameraSnapBtn.disabled=false;
+  cameraUseBtn.disabled=true;
+  cameraRetakeBtn.disabled=true;
+  setStatus('ok','다시 정면·무표정으로 맞춘 뒤 사진 촬영을 누르세요.');
+}
+function useCameraFrame(){
+  if(!capturedCameraDataUrl)return;
+  const dataUrl=capturedCameraDataUrl;
+  closeCamera();
+  loadImageForAnalysis(dataUrl,{sourceName:'webcam-capture.jpg'});
+}
+
+async function analyzeUploadedImage(){
+  if(!image){setStatus('bad','먼저 얼굴사진을 업로드하거나 웹캠으로 촬영하세요.');return;}
+  const myToken=++analysisToken;
+  try{
+    await initFaceMesh();
+    if(myToken!==analysisToken)return;
+    setStatus('','사진에서 눈·코·입·턱 랜드마크를 자동 인식하는 중…');
+    const inputCanvas=makeFaceMeshInputCanvas(1280);
+    await Promise.race([
+      mp.send({image:inputCanvas}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('FaceMesh 분석 시간이 초과되었습니다.')),15000))
+    ]);
+  }catch(err){
+    console.error(err);
+    useEstimatedAnalysis((err&&err.message?err.message:'MediaPipe 분석 중 오류가 발생했습니다.')+' 사진은 화면에 표시했고, 임시 분석을 생성했습니다.');
+  }
+}
+async function handleImageFileUpload(file,sourceLabel='얼굴사진'){
+  if(!file)return;
+  if(!file.type||!file.type.startsWith('image/')){
+    const msg='이미지 파일만 업로드할 수 있습니다. JPG, PNG, HEIC 변환 이미지 등을 사용하세요.';
+    setStatus('bad',msg);alert(msg);return;
+  }
+  try{
+    setStatus('',sourceLabel+' 파일을 읽어 자동 분석을 시작합니다…');
+    const dataUrl=await readFileAsDataUrl(file);
+    loadImageForAnalysis(dataUrl,{sourceName:file.name||sourceLabel});
+  }catch(err){
+    console.error(err);
+    setStatus('bad',sourceLabel+' 파일을 읽지 못했습니다.');
+    alert(sourceLabel+' 파일을 읽지 못했습니다.');
+  }
+}
+fileInput.addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];await handleImageFileUpload(f,'얼굴사진');fileInput.value='';});
+cameraFileInput.addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];await handleImageFileUpload(f,'카메라/사진');cameraFileInput.value='';});
+stateInput.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;loadSavedSession(f);stateInput.value='';});
+saveStateBtn.onclick=saveCurrentSession;
+resetBtn.onclick=()=>{if(!image&& !currentImageDataUrl){fullResetApp();return;} if(confirm('현재 불러온 사진과 분석 내용을 모두 지우고 처음부터 다시 시작할까요?'))fullResetApp();};
+function firstImageFileFromDrop(e){
+  const files=Array.from((e.dataTransfer&&e.dataTransfer.files)||[]);
+  return files.find(f=>f.type&&f.type.startsWith('image/'))||files[0];
+}
+['dragenter','dragover'].forEach(evt=>stage.addEventListener(evt,e=>{
+  e.preventDefault();e.stopPropagation();
+  stage.classList.add('is-dragover');
+  if(e.dataTransfer)e.dataTransfer.dropEffect='copy';
+}));
+['dragleave','drop'].forEach(evt=>stage.addEventListener(evt,e=>{
+  e.preventDefault();e.stopPropagation();
+  if(evt==='dragleave'&&stage.contains(e.relatedTarget))return;
+  stage.classList.remove('is-dragover');
+}));
+stage.addEventListener('drop',async e=>{
+  const f=firstImageFileFromDrop(e);
+  if(!f){setStatus('bad','드롭한 항목에서 이미지 파일을 찾지 못했습니다.');return;}
+  await handleImageFileUpload(f,'드롭한 얼굴사진');
+});
+stage.addEventListener('click',e=>{
+  if(image)return;
+  fileInput.click();
+});
+function updateToggleButtonState(){const toggleBtn=document.getElementById('toggleBtn'),dangerBtn=document.getElementById('dangerBtn');toggleBtn.classList.toggle('is-active',showOverlay);toggleBtn.classList.toggle('is-off',!showOverlay);toggleBtn.setAttribute('aria-pressed',String(showOverlay));dangerBtn.classList.toggle('is-active',showDanger);dangerBtn.classList.toggle('is-off',!showDanger);dangerBtn.setAttribute('aria-pressed',String(showDanger));}
+cameraBtn.onclick=openCamera;cameraSnapBtn.onclick=captureCameraFrame;cameraUseBtn.onclick=useCameraFrame;cameraRetakeBtn.onclick=retakeCameraFrame;cameraCancelBtn.onclick=closeCamera;cameraCloseBtn.onclick=closeCamera;cameraModal.addEventListener('click',e=>{if(e.target===cameraModal)closeCamera();});window.addEventListener('beforeunload',()=>stopCamera(false));
+reanalyzeBtn.onclick=()=>analyzeUploadedImage();document.getElementById('toggleBtn').onclick=()=>{showOverlay=!showOverlay;updateToggleButtonState();draw();};document.getElementById('dangerBtn').onclick=()=>{showDanger=!showDanger;updateToggleButtonState();draw();};document.getElementById('printBtn').onclick=()=>window.print();
+document.getElementById('alpha').oninput=e=>{document.getElementById('vAlpha').textContent=e.target.value+'%';draw();};document.getElementById('sensitivity').oninput=e=>{document.getElementById('vSensitivity').textContent=e.target.value+'%';if(image&&landmarks)runAllAnalysis(false);draw();};document.getElementById('skinThickness').onchange=e=>{document.getElementById('vSkinThickness').textContent=e.target.options[e.target.selectedIndex].text.split('·')[0].trim();if(image&&landmarks)evaluateSafety();draw();};document.getElementById('goal').onchange=e=>{document.getElementById('vGoal').textContent=e.target.options[e.target.selectedIndex].text;if(image)draw();};document.querySelectorAll('.manual').forEach(inp=>inp.addEventListener('input',e=>{const k=e.target.dataset.k;manualTouched[k]=true;scores[k]=+e.target.value;document.getElementById('v'+cap(k)).textContent=scores[k];draw();}));document.querySelectorAll('#contraList input').forEach(ch=>ch.addEventListener('change',()=>{evaluateContraindications();draw();}));document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>applyActiveTab(t.dataset.tab));
+function mouse(e){const r=overlay.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];}
+function nearestDragPoint(x,y){let best=-1,bd=999;drawPoints.forEach((p,idx)=>{const c=normToCanvas(p.x,p.y),d=Math.hypot(x-c[0],y-c[1]);if(d<bd){bd=d;best=idx;}});return bd<18?best:-1;}
+function pointInsideCurrentImage(x,y){return !!image&&x>=ox&&x<=ox+iw()&&y>=oy&&y<=oy+ih();}
+function constrainImagePan(){
+  if(!image)return;
+  const W=photo.clientWidth,H=photo.clientHeight,margin=48,w=iw(),h=ih();
+  if(w>margin*2){ox=clamp(ox,Math.min(W-margin,margin-w),Math.max(W-margin,margin-w));}
+  if(h>margin*2){oy=clamp(oy,Math.min(H-margin,margin-h),Math.max(H-margin,margin-h));}
+}
+stage.addEventListener('pointerdown',e=>{
+  const m=mouse(e);
+  dragIndex=landmarks?nearestDragPoint(m[0],m[1]):-1;
+  if(dragIndex>=0){
+    imageDrag=null;
+    stage.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
+  if(pointInsideCurrentImage(m[0],m[1])){
+    imageDrag={startX:m[0],startY:m[1],startOx:ox,startOy:oy};
+    stage.classList.add('is-panning');
+    stage.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+});
+stage.addEventListener('pointermove',e=>{
+  if(imageDrag){
+    const m=mouse(e);
+    ox=imageDrag.startOx+(m[0]-imageDrag.startX);
+    oy=imageDrag.startOy+(m[1]-imageDrag.startY);
+    constrainImagePan();
+    draw();
+    e.preventDefault();
+    return;
+  }
+  if(dragIndex<0||dragIndex===null)return;
+  const m=mouse(e),n=canvasToNorm(m[0],m[1]);
+  updateLandmarkFromDrag(dragIndex,clamp(n[0]),clamp(n[1]));
+  draw();
+  e.preventDefault();
+});
+function endStageDrag(){dragIndex=null;imageDrag=null;stage.classList.remove('is-panning');}
+stage.addEventListener('pointerup',endStageDrag);
+stage.addEventListener('pointercancel',endStageDrag);
+stage.addEventListener('lostpointercapture',endStageDrag);
+stage.addEventListener('wheel',e=>{if(!image)return;e.preventDefault();const factor=e.deltaY<0?1.04:.96,m=mouse(e);ox=m[0]-(m[0]-ox)*factor;oy=m[1]-(m[1]-oy)*factor;scale*=factor;constrainImagePan();draw();},{passive:false});
+setTimeout(()=>{if(typeof FaceMesh==='undefined')setStatus('bad','FaceMesh CDN을 불러오지 못했습니다. 인터넷 연결을 확인하세요.');else setStatus('ok','MediaPipe FaceMesh 준비 완료. 얼굴 사진을 업로드하거나 화면에 드롭하세요.');},700);resize();
+</script>
+</body>
+</html>
